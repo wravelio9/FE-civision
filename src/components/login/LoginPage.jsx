@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import officerImg from '../../assets/officer-login.png'
 import './LoginPage.css'
 
@@ -36,11 +37,13 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate()
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    // Wire this up to your auth API.
+    // Wire this up to your auth API. On success, go to the dashboard.
     console.log('Login attempt:', { email, password })
+    navigate('/dashboard')
   }
 
   return (
