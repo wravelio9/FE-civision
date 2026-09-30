@@ -161,7 +161,7 @@ export default function Dashboard() {
             <button className="banner__btn">Review It</button>
           </div>
           <div className="banner__illustration" aria-hidden="true">
-            <img className="officer-img" src={Officer} />
+            <img className="banner__officer-img" src={Officer} alt="" />
           </div>
         </section>
 
