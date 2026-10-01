@@ -11,7 +11,8 @@ export function AppLayout({ title, fitScreen = false, children }) {
       <Sidebar />
       <main className="main">
         <Topbar title={title} />
-        {children}
+        {/* Only the page content animates in. The sidebar and topbar stay static. */}
+        <div className="page-content">{children}</div>
       </main>
     </div>
   )

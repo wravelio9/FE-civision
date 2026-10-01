@@ -116,9 +116,40 @@
 
 /* ---------- Main ---------- */
 .main {
-  position: relative; /* lets a page pin artwork to this area's corners (e.g. the officer on Upload Media) */
+  display: flex;
+  flex-direction: column; /* topbar on top, .page-content fills the rest */
   padding: 0 32px 28px;
   min-width: 0; /* keeps wide content from stretching the grid column (replaces overflow: hidden, which broke sticky) */
+}
+
+/* ---------- Page content (everything below the topbar) ---------- */
+.page-content {
+  flex: 1 0 auto;      /* fills the rest of .main, so its bottom edge = .main's bottom padding */
+  /* Pages can pin artwork to this box's corners (e.g. the officer on Upload Media).
+     Set here so the position stays the same during and after the animation
+     (a transform also makes the box the reference for absolute children). */
+  position: relative;
+
+  /* Same entrance as the login card: fade in while sliding down from above */
+  animation: page-enter 0.6s ease-out both;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .page-content {
+    animation: none;
+  }
 }
 
 /* ---------- Topbar ---------- */
@@ -197,9 +228,16 @@
   }
 
   .app-layout--fit-screen .main {
+    min-height: 0;
+  }
+
+  /* Take exactly the space left under the topbar and let the page's own
+     content shrink inside it (e.g. the Dashboard table scrolls in its card) */
+  .app-layout--fit-screen .page-content {
+    flex: 1 1 0;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    min-height: 0;
   }
 }
 

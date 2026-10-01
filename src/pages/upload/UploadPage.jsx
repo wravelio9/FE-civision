@@ -1,4 +1,6 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { AppLayout } from '../../components/AppLayout'
 import { Icon } from '../../components/Icons'
 // Placeholder officer. Save the officer from the Upload Media design as
@@ -38,11 +40,49 @@ function checkFiles(fileList) {
 const isSameFile = (a, b) =>
   a.name === b.name && a.size === b.size && a.lastModified === b.lastModified
 
+// Sends the photos to the backend.
+// There's no upload endpoint yet, so for now this only waits 2 seconds and
+// pretends it worked. When the endpoint is ready, replace the body with
+// something like this (field name and path depend on your BE):
+//
+//   const body = new FormData()
+//   files.forEach((file) => body.append('photos', file))
+//   const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/upload`, {
+//     method: 'POST',
+//     body, // don't set Content-Type yourself, the browser adds it for FormData
+//   })
+//   if (!res.ok) throw new Error(`Upload gagal (${res.status}). Coba lagi.`)
+async function uploadPhotos(files) {
+  await new Promise((resolve) => setTimeout(resolve, 2000))
+}
+
 export default function UploadPage() {
+  const navigate = useNavigate()
   const inputRef = useRef(null)
+  const dashboardBtnRef = useRef(null)
   const [files, setFiles] = useState([])
   const [errors, setErrors] = useState([])
   const [isDragging, setIsDragging] = useState(false)
+  // 'idle' -> 'uploading' (dark blur + spinner) -> 'success' (popup)
+  const [status, setStatus] = useState('idle')
+
+  // Move keyboard focus into the popup when it opens
+  useEffect(() => {
+    if (status === 'success') dashboardBtnRef.current?.focus()
+  }, [status])
+
+  const handleSubmit = async () => {
+    setErrors([])
+    setStatus('uploading')
+    try {
+      await uploadPhotos(files)
+      setStatus('success')
+    } catch (err) {
+      // Close the overlay and show what went wrong, so the user can try again
+      setStatus('idle')
+      setErrors([err.message || 'Upload gagal. Coba lagi.'])
+    }
+  }
 
   const addFiles = (fileList) => {
     const { accepted, errors: newErrors } = checkFiles(fileList)
@@ -136,12 +176,71 @@ export default function UploadPage() {
               ))}
             </ul>
           )}
+
+          {/* Only shown once at least one photo has been added */}
+          {files.length > 0 && (
+            <button
+              type="button"
+              className="upload-submit"
+              onClick={handleSubmit}
+              disabled={status === 'uploading'}
+            >
+              Submit
+            </button>
+          )}
         </div>
 
         <div className="upload-officer" aria-hidden="true">
           <img src={officerImg} alt="" />
         </div>
       </section>
+
+      {/* Rendered straight into <body> so it covers the sidebar and topbar too */}
+      {status !== 'idle' &&
+        createPortal(
+          <div className="upload-overlay">
+            {status === 'uploading' && (
+              <div className="upload-loading" role="status" aria-live="polite">
+                <span className="upload-spinner" aria-hidden="true" />
+                <p>Mengupload foto...</p>
+              </div>
+            )}
+
+            {status === 'success' && (
+              <div
+                className="upload-success"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="upload-success-title"
+              >
+                <div className="upload-success__check" aria-hidden="true">
+                  <Icon.Check />
+                </div>
+                <h2 id="upload-success-title" className="upload-success__title">
+                  Upload berhasil
+                </h2>
+                <div className="upload-success__actions">
+                  <button
+                    ref={dashboardBtnRef}
+                    type="button"
+                    className="upload-success__btn upload-success__btn--secondary"
+                    onClick={() => navigate('/dashboard')}
+                  >
+                    Kembali ke Dashboard
+                  </button>
+                  <button
+                    type="button"
+                    className="upload-success__btn upload-success__btn--primary"
+                    onClick={() => navigate('/report')}
+                  >
+                    Lihat Report
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>,
+          document.body,
+        )}
     </AppLayout>
   )
 }

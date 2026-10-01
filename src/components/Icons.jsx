@@ -124,6 +124,14 @@ function Close() {
   )
 }
 
+function Check() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+      <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 // Bigger, colored folder illustration for the upload drop zone.
 // Unlike the icons above it has its own colors, so it ignores currentColor.
 function Folder() {
@@ -180,5 +188,6 @@ export const Icon = {
   ArrowRight,
   Plus,
   Close,
+  Check,
   Folder,
 }

@@ -116,11 +116,209 @@
   background: #fdf1f1;
 }
 
+/* ---------- Submit button ---------- */
+.upload-submit {
+  position: relative;
+  z-index: 2;            /* above the officer image, which overlaps the drop zone */
+  margin-top: 18px;
+  padding: 10px 44px;
+  border: none;
+  border-radius: 999px;
+  background: #2d2b6b;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(45, 43, 107, 0.3);
+  transition: background-color 0.15s ease, transform 0.05s ease;
+}
+
+.upload-submit:hover:not(:disabled) {
+  background: #3d3a8f;
+}
+
+.upload-submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.upload-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ---------- Overlay: loading + success popup ---------- */
+/* The overlay is rendered into <body> (outside .app-layout), so the CSS
+   variables like --purple aren't available here. Colors are written out. */
+.upload-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;         /* above the sidebar and the sticky topbar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(17, 16, 40, 0.55);           /* dark tint */
+  backdrop-filter: blur(6px);                    /* blur the page behind it */
+  -webkit-backdrop-filter: blur(6px);            /* Safari */
+  animation: upload-fade-in 0.2s ease-out both;
+}
+
+/* Loading */
+.upload-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.upload-spinner {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 5px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #fff;
+  animation: upload-spin 0.8s linear infinite;
+}
+
+/* Success popup */
+.upload-success {
+  width: min(460px, 100%);
+  padding: 36px 32px 28px;
+  border-radius: 20px;
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+  animation: upload-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.upload-success__check {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  background: #4caf50;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px rgba(76, 175, 80, 0.35);
+}
+
+.upload-success__check svg {
+  width: 40px;
+  height: 40px;
+}
+
+/* The tick draws itself in after the popup appears */
+.upload-success__check path {
+  stroke-dasharray: 22;
+  stroke-dashoffset: 22;
+  animation: upload-draw 0.4s 0.25s ease-out forwards;
+}
+
+.upload-success__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2d2b6b;
+}
+
+.upload-success__actions {
+  margin-top: 24px;
+  display: flex;
+  gap: 10px;
+}
+
+.upload-success__btn {
+  flex: 1;
+  padding: 10px 16px;
+  white-space: nowrap;   /* keep each label on one line (buttons stack on very narrow screens) */
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.upload-success__btn--secondary {
+  border: 1.5px solid #5a50c3;
+  background: #fff;
+  color: #5a50c3;
+}
+
+.upload-success__btn--secondary:hover {
+  background: #f0eefc;
+}
+
+.upload-success__btn--primary {
+  border: 1.5px solid #5a50c3;
+  background: #5a50c3;
+  color: #fff;
+}
+
+.upload-success__btn--primary:hover {
+  background: #4a40b8;
+  border-color: #4a40b8;
+}
+
+.upload-success__btn:focus-visible {
+  outline: 3px solid #c9c5f3;
+  outline-offset: 2px;
+}
+
+@keyframes upload-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes upload-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes upload-pop {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes upload-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Less movement for users who asked their OS to reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .upload-overlay,
+  .upload-success {
+    animation: none;
+  }
+
+  .upload-success__check path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .upload-spinner {
+    animation-duration: 2s;
+  }
+}
+
+@media (max-width: 420px) {
+  .upload-success__actions {
+    flex-direction: column;
+  }
+}
+
 /* ---------- Officer ---------- */
 .upload-officer {
-  position: absolute;    /* pinned to the bottom-left corner of .main (see AppLayout.css) */
-  left: 0;
-  bottom: 0;
+  /* Positioned from .page-content (see AppLayout.css). The negative offsets cancel
+     .main's padding (32px sides, 28px bottom), so the officer sits right against
+     the sidebar edge and the bottom of the screen. */
+  position: absolute;
+  left: -32px;
+  bottom: -28px;
   z-index: 1;            /* in front of the drop zone's dashed border, like the design */
   height: min(60vh, 40vw);
   overflow: hidden;      /* cuts off the part of the image that would go under the sidebar */
