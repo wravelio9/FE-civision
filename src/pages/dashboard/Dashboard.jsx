@@ -1,0 +1,109 @@
+import { AppLayout } from '../../components/AppLayout'
+import { Icon } from '../../components/Icons'
+import Officer from '../../assets/officer-dashboard.png'
+import './Dashboard.css'
+
+/* ---------- Mock table data ---------- */
+const REVIEW_ROWS = Array.from({ length: 6 }, () => ({
+  location: 'Jl. Jati Baru Raya',
+  timestamp: '13:19:27',
+  status: 'Valid',
+}))
+
+export default function Dashboard() {
+  return (
+    <AppLayout title="Dashboard">
+      {/* Welcome banner */}
+      <section className="banner">
+        <div className="banner__text">
+          <h2 className="banner__greeting">Good Morning, Shavel</h2>
+          <p className="banner__desc">
+            You currently have <a href="#incidents">10 new incidents</a> queued up for review.
+            <br />
+            Let&apos;s tackle them!
+          </p>
+          <button className="banner__btn">Review It</button>
+        </div>
+        <div className="banner__illustration" aria-hidden="true">
+          <img className="banner__officer-img" src={Officer} alt="" />
+        </div>
+      </section>
+
+      {/* Review progress + map */}
+      <section className="content">
+        <div className="review">
+          <div className="review__head">
+            <h3 className="review__title">Review Progress</h3>
+            <div className="search">
+              <input className="search__input" placeholder="Search something..." />
+              <button className="search__btn" aria-label="Search">
+                <Icon.Search />
+              </button>
+            </div>
+          </div>
+
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Location</th>
+                <th>Timestamp</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {REVIEW_ROWS.map((row, i) => (
+                <tr key={i}>
+                  <td className="table__location">{row.location}</td>
+                  <td className="table__time">{row.timestamp}</td>
+                  <td>
+                    <span className="status status--valid">
+                      <span className="status__dot" />
+                      {row.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="map" aria-label="Map of incident locations">
+          <div className="map__grid" />
+          <span className="map__pin" style={{ top: '22%', left: '30%' }} />
+          <span className="map__pin" style={{ top: '55%', left: '58%' }} />
+          <span className="map__pin" style={{ top: '72%', left: '35%' }} />
+        </div>
+      </section>
+    </AppLayout>
+  )
+}
+
+/* Simple flat officer illustration for the banner (inline SVG) */
+function OfficerBanner() {
+  return (
+    <svg viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg" className="banner__officer">
+      {/* Body */}
+      <path d="M60 220v-40c0-28 22-50 50-50s50 22 50 50v40H60Z" fill="#9fb4d8" />
+      <path d="M110 130c-18 0-34 9-42 24h84c-8-15-24-24-42-24Z" fill="#7f97c4" />
+      {/* Tie / collar */}
+      <path d="M104 130l6 14 6-14-6-6-6 6Z" fill="#2d2b6b" />
+      {/* Neck */}
+      <rect x="98" y="92" width="24" height="30" rx="10" fill="#f2c9a8" />
+      {/* Head */}
+      <circle cx="110" cy="72" r="30" fill="#f7d3b3" />
+      {/* Hair under cap */}
+      <path d="M84 74c0-6 2-12 5-16 6 6 36 6 42 0 3 4 5 10 5 16-4-8-14-12-26-12s-22 4-26 12Z" fill="#1b1b1b" />
+      {/* Cap */}
+      <path d="M80 58c0-14 14-24 30-24s30 10 30 24H80Z" fill="#2d2b6b" />
+      <rect x="78" y="58" width="64" height="8" rx="4" fill="#22214f" />
+      <rect x="102" y="48" width="16" height="8" rx="2" fill="#e2b53a" />
+      {/* Eyes */}
+      <circle cx="100" cy="72" r="3.2" fill="#1b1b1b" />
+      <circle cx="120" cy="72" r="3.2" fill="#1b1b1b" />
+      {/* Smile */}
+      <path d="M102 82c4 4 12 4 16 0" stroke="#c98b63" strokeWidth="3" strokeLinecap="round" />
+      {/* Badge */}
+      <circle cx="140" cy="150" r="8" fill="#e2b53a" />
+    </svg>
+  )
+}

@@ -1,0 +1,256 @@
+/* Every class here starts with "report-" so it can't clash with the dashboard's
+   classes (all CSS files end up in one global stylesheet). */
+
+/* ---------- Stats card + officer ---------- */
+.report-hero {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding-right: 60px; /* keeps the officer clear of the bell/profile icons above it */
+}
+
+.report-stats {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 18px 28px;
+  margin-bottom: 20px; /* the officer's feet end a bit lower than the card, like the design */
+  box-shadow: 0 6px 20px rgba(20, 20, 50, 0.06);
+}
+
+.report-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.report-stat__value {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.report-stat__label {
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.report-stat--total {
+  color: #4b4ba8;
+}
+
+.report-stat--valid {
+  color: #2f7a3b;
+}
+
+.report-stat--invalid {
+  color: #a3322a;
+}
+
+.report-stat--unverified {
+  color: #555;
+}
+
+/* The officer is taller than the stats card. The negative top margin stops it
+   from making this row taller, so it rises into the (transparent) topbar instead. */
+.report-hero__officer {
+  flex-shrink: 0;
+  height: 190px;
+  width: auto;
+  margin-top: -110px;
+  display: block;
+}
+
+/* ---------- Table ---------- */
+.report-table-wrap {
+  overflow-x: auto; /* on narrow screens the table scrolls sideways instead of squashing */
+}
+
+.report-table {
+  width: 100%;
+  min-width: 640px;
+  table-layout: fixed;       /* column widths come from the header cells below */
+  border-collapse: separate;
+  border-spacing: 4px 0;     /* small gaps between the purple header cells */
+  font-size: 12px;
+}
+
+.report-table th {
+  background: #6462b4;
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 4px;
+}
+
+.report-table th:nth-child(1) { width: 10%; }
+.report-table th:nth-child(2) { width: 28%; }
+.report-table th:nth-child(3) { width: 16%; }
+.report-table th:nth-child(4) { width: 15%; }
+.report-table th:nth-child(5) { width: 9%; }
+.report-table th:nth-child(6) { width: 22%; text-align: center; }
+
+.report-table td {
+  padding: 9px 10px;
+  color: #5b5ba3;
+  white-space: nowrap;
+}
+
+/* Long addresses end with "..." (hover shows the full text via the title attribute) */
+.report-table__location {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-table__center {
+  text-align: center;
+}
+
+.report-table__link {
+  color: #4d4ba6;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.report-table__link:hover {
+  color: var(--purple);
+}
+
+.report-table__status-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-left: 6px;
+}
+
+.report-table__download {
+  border: none;
+  background: none;
+  color: #b4b4c6;
+  cursor: pointer;
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 6px;
+}
+
+.report-table__download:hover {
+  color: var(--purple);
+  background: #eeecfb;
+}
+
+/* Status dot + label */
+.report-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 500;
+}
+
+.report-status__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.report-status--valid {
+  color: #4c9a5f;
+}
+
+.report-status--invalid {
+  color: #d0433a;
+}
+
+.report-status--unverified {
+  color: #9b9ba5;
+}
+
+/* ---------- Pagination ---------- */
+.report-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.report-pagination__pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #e6e6ef;
+  border-radius: 999px;
+  padding: 3px;
+}
+
+.report-pagination__page,
+.report-pagination__gap {
+  min-width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #6a6a9a;
+}
+
+.report-pagination__page {
+  border: none;
+  background: none;
+  border-radius: 50%;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.report-pagination__page:hover {
+  color: var(--purple);
+}
+
+.report-pagination__page--active {
+  background: #fff;
+  color: var(--purple-dark);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(20, 20, 50, 0.12);
+}
+
+.report-pagination__next {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: #e6e6ef;
+  color: var(--purple-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.report-pagination__next:hover:not(:disabled) {
+  background: #dcdaf5;
+}
+
+.report-pagination__next:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 700px) {
+  .report-hero {
+    padding-right: 0;
+  }
+
+  .report-hero__officer {
+    display: none;
+  }
+
+  .report-stats {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 14px;
+  }
+}

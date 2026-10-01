@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import LoginPage from './components/login/LoginPage.jsx'
-import Dashboard from './components/dashboard/Dashboard.jsx'
+import LoginPage from './pages/login/LoginPage.jsx'
+import Dashboard from './pages/dashboard/Dashboard.jsx'
+import ReportPage from './pages/report/ReportPage.jsx'
+import UploadPage from './pages/upload/UploadPage.jsx'
 
 export default function App() {
   return (
@@ -8,6 +10,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/report" element={<ReportPage />} />
+        <Route path="/upload" element={<UploadPage />} />
       </Routes>
     </BrowserRouter>
   )

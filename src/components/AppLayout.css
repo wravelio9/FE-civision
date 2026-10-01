@@ -1,0 +1,204 @@
+/* Shared shell for the pages after login (Dashboard, Report Details, ...) */
+.app-layout {
+  --purple: #5a4fcf;
+  --purple-dark: #2d2b6b;
+  --ink: #2b2f4a;
+  --muted: #9aa0b4;
+  --line: #eef0f5;
+  --bg: #f4f5f9;
+
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  /* Stick to the viewport while the page scrolls */
+  position: sticky;
+  top: 0;
+  height: 100vh;       /* fixed height so it has room to stick */
+  align-self: start;   /* stop the grid from stretching it to page height */
+  overflow-y: auto;    /* scroll inside if the nav is taller than the screen */
+
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 18px;
+  border-right: 1px solid var(--line);
+}
+
+.sidebar__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px 30px;
+}
+
+.sidebar__logo-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+}
+
+.sidebar__logo-text {
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--purple-dark);
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar__divider {
+  height: 1px;
+  background: var(--line);
+  margin: 18px 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--muted);
+  text-decoration: none; /* items with a page are <a> links (NavLink) */
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-item:hover {
+  background: #f6f5fd;
+  color: var(--purple);
+}
+
+.nav-item--active {
+  background: #eeecfb;
+  color: var(--purple);
+  font-weight: 600;
+  position: relative;
+}
+
+.nav-item--active::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--purple);
+}
+
+.nav-item--logout {
+  margin-top: auto;
+  color: var(--muted);
+}
+
+.nav-item--logout:hover {
+  color: #e05a5a;
+  background: #fdf1f1;
+}
+
+/* ---------- Main ---------- */
+.main {
+  position: relative; /* lets a page pin artwork to this area's corners (e.g. the officer on Upload Media) */
+  padding: 0 32px 28px;
+  min-width: 0; /* keeps wide content from stretching the grid column (replaces overflow: hidden, which broke sticky) */
+}
+
+/* ---------- Topbar ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;               /* stay above the page content while scrolling */
+
+  /* Transparent at the top of the page, so artwork can sit behind it (like the
+     officer on Report Details). Turns into glass once the page scrolls. */
+  background-color: transparent;
+  border-bottom: 1px solid transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease, backdrop-filter 0.2s ease;
+
+  /* Stretch the bar to the edges of .main (which has 32px side padding) */
+  margin-left: -32px;
+  margin-right: -32px;
+  padding: 28px 32px 16px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+/* Glass effect: see-through tint + blur of whatever scrolls behind it.
+   Topbar.jsx adds this class when the page is scrolled. */
+.topbar--scrolled {
+  background-color: rgba(244, 245, 249, 0.6);         /* --bg at 60% opacity */
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%); /* Safari */
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+.topbar__title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--purple-dark);
+}
+
+.topbar__subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.icon-btn {
+  border: none;
+  background: none;
+  color: var(--purple-dark);
+  cursor: pointer;
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.icon-btn:hover {
+  background: #eeecfb;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: static; /* on small screens the sidebar becomes a top row, so don't pin it */
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .nav-item--logout {
+    margin-top: 0;
+    margin-left: auto;
+  }
+}

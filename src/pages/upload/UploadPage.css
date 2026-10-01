@@ -1,0 +1,142 @@
+/* Every class here starts with "upload-" so it can't clash with other pages
+   (all CSS files end up in one global stylesheet). */
+
+/* ---------- Drop zone ---------- */
+.upload-dropzone {
+  /* Fill most of the screen below the topbar, but never get smaller than 340px */
+  min-height: max(340px, calc(100vh - 230px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+  border: 3px dashed #6b62c9;
+  border-radius: 32px;
+  background: #ebe9f6;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/* While a file is dragged over the drop zone */
+.upload-dropzone--dragging {
+  background: #dedbf6;
+  border-color: var(--purple);
+}
+
+.upload-dropzone__title {
+  margin-top: 18px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #5b55b3;
+}
+
+.upload-dropzone__hint {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #8a86c0;
+}
+
+.upload-dropzone__btn {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #5a50c3;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(90, 80, 195, 0.3);
+  transition: background-color 0.15s ease;
+}
+
+.upload-dropzone__btn:hover {
+  background: #4a40b8;
+}
+
+/* ---------- Errors + selected files ---------- */
+.upload-errors {
+  margin-top: 14px;
+  list-style: none;
+  font-size: 12px;
+  color: #c0392b;
+}
+
+.upload-files {
+  margin-top: 18px;
+  width: min(420px, 100%);
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.upload-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 14px;
+  background: #fff;
+  border-radius: 10px;
+  font-size: 12px;
+  text-align: left;
+  box-shadow: 0 1px 3px rgba(20, 20, 50, 0.06);
+}
+
+.upload-file__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.upload-file__size {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.upload-file__remove {
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.upload-file__remove:hover {
+  color: #e05a5a;
+  background: #fdf1f1;
+}
+
+/* ---------- Officer ---------- */
+.upload-officer {
+  position: absolute;    /* pinned to the bottom-left corner of .main (see AppLayout.css) */
+  left: 0;
+  bottom: 0;
+  z-index: 1;            /* in front of the drop zone's dashed border, like the design */
+  height: min(60vh, 40vw);
+  overflow: hidden;      /* cuts off the part of the image that would go under the sidebar */
+  pointer-events: none;  /* drops and clicks pass through to the drop zone */
+}
+
+.upload-officer img {
+  height: 100%;
+  width: auto;
+  display: block;
+  margin-left: -40px;    /* shift left so the sidebar edge cuts off the shoulder, like the design */
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .upload-officer {
+    display: none;
+  }
+}
