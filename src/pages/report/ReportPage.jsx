@@ -3,7 +3,7 @@ import { AppLayout } from '../../components/AppLayout'
 import { Icon } from '../../components/Icons'
 // Placeholder officer. Save the officer from the Report Details design as
 // src/assets/officer-report.png, then change this line to import that file instead.
-import officerImg from '../../assets/officer-login.png'
+import officerImg from '../../assets/officer-report.png'
 import './ReportPage.css'
 
 /* ---------- Mock data (replace with data from the API later) ---------- */

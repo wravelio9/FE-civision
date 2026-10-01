@@ -5,7 +5,7 @@ import { AppLayout } from '../../components/AppLayout'
 import { Icon } from '../../components/Icons'
 // Placeholder officer. Save the officer from the Upload Media design as
 // src/assets/officer-upload.png, then change this line to import that file instead.
-import officerImg from '../../assets/officer-login.png'
+import officerImg from '../../assets/officer-upload.png'
 import './UploadPage.css'
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png']

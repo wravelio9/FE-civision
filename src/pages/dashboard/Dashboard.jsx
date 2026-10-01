@@ -1,5 +1,7 @@
+import { useState, useEffect, createElement } from 'react'
 import { AppLayout } from '../../components/AppLayout'
 import { Icon } from '../../components/Icons'
+import { useNavigate } from 'react-router-dom'
 import Officer from '../../assets/officer-dashboard.png'
 import './Dashboard.css'
 
@@ -11,6 +13,8 @@ const REVIEW_ROWS = Array.from({ length: 6 }, () => ({
 }))
 
 export default function Dashboard() {
+  const navigate = useNavigate()
+
   return (
     // fitScreen: the dashboard always fits on one screen and can't be scrolled
     <AppLayout title="Dashboard" fitScreen>
@@ -18,12 +22,12 @@ export default function Dashboard() {
       <section className="banner">
         <div className="banner__text">
           <h2 className="banner__greeting">Good Morning, Shavel</h2>
-          <p className="banner__desc">
+          <p className="banner__desc" onClick={() => navigate('/report')}>
             You currently have <a href="#incidents">10 new incidents</a> queued up for review.
             <br />
             Let&apos;s tackle them!
           </p>
-          <button className="banner__btn">Review It</button>
+          <button type="button" className="banner__btn" onClick={() => navigate('/report')}>Review It</button>
         </div>
         <div className="banner__illustration" aria-hidden="true">
           <img className="banner__officer-img" src={Officer} alt="" />
