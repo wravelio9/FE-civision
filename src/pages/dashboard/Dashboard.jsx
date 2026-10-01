@@ -12,7 +12,8 @@ const REVIEW_ROWS = Array.from({ length: 6 }, () => ({
 
 export default function Dashboard() {
   return (
-    <AppLayout title="Dashboard">
+    // fitScreen: the dashboard always fits on one screen and can't be scrolled
+    <AppLayout title="Dashboard" fitScreen>
       {/* Welcome banner */}
       <section className="banner">
         <div className="banner__text">
@@ -35,36 +36,43 @@ export default function Dashboard() {
           <div className="review__head">
             <h3 className="review__title">Review Progress</h3>
             <div className="search">
-              <input className="search__input" placeholder="Search something..." />
+              <input
+                className="search__input"
+                placeholder="Search something..."
+                aria-label="Search review progress"
+              />
               <button className="search__btn" aria-label="Search">
                 <Icon.Search />
               </button>
             </div>
           </div>
 
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Location</th>
-                <th>Timestamp</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {REVIEW_ROWS.map((row, i) => (
-                <tr key={i}>
-                  <td className="table__location">{row.location}</td>
-                  <td className="table__time">{row.timestamp}</td>
-                  <td>
-                    <span className="status status--valid">
-                      <span className="status__dot" />
-                      {row.status}
-                    </span>
-                  </td>
+          {/* The card scrolls inside itself when the screen is too short */}
+          <div className="table-card">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th scope="col">Location</th>
+                  <th scope="col">Timestamp</th>
+                  <th scope="col">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {REVIEW_ROWS.map((row, i) => (
+                  <tr key={i}>
+                    <td className="table__location">{row.location}</td>
+                    <td>{row.timestamp}</td>
+                    <td>
+                      <span className="status status--valid">
+                        <span className="status__dot" />
+                        {row.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div className="map" aria-label="Map of incident locations">

@@ -185,6 +185,24 @@
   background: #eeecfb;
 }
 
+/* ---------- Fit-screen pages (no page scrolling) ---------- */
+/* <AppLayout fitScreen> locks the page to the screen height, so the page itself
+   can't scroll. The page's content has to shrink to fit instead (the Dashboard's
+   table scrolls inside its own card). Small screens keep normal scrolling,
+   otherwise content would get cut off. */
+@media (min-width: 901px) and (min-height: 560px) {
+  .app-layout--fit-screen {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .app-layout--fit-screen .main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
   .app-layout {
