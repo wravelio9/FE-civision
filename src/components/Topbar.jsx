@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from './Icons'
 import { Time } from './Time'
 
 // onMenuClick opens the sidebar on small screens (the hamburger button is hidden on desktop).
 export function Topbar({ title, menuOpen = false, menuButtonRef, onMenuClick }) {
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
   // True once the page is scrolled down. Switches on the glass background.
   const [scrolled, setScrolled] = useState(false)
 
@@ -47,7 +50,13 @@ export function Topbar({ title, menuOpen = false, menuButtonRef, onMenuClick }) 
         <button type="button" className="icon-btn" aria-label="Notifications">
           <Icon.Bell />
         </button>
-        <button type="button" className="icon-btn" aria-label="Profile">
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label="Profile"
+          aria-current={pathname === '/profile' ? 'page' : undefined}
+          onClick={() => navigate('/profile')}
+        >
           <Icon.Avatar />
         </button>
       </div>

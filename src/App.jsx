@@ -3,6 +3,7 @@ import LoginPage from './pages/login/LoginPage.jsx'
 import Dashboard from './pages/dashboard/Dashboard.jsx'
 import ReportPage from './pages/report/ReportPage.jsx'
 import UploadPage from './pages/upload/jsx/UploadPage.jsx'
+import ProfilePage from './pages/profile/ProfilePage.jsx'
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/report" element={<ReportPage />} />
         <Route path="/upload" element={<UploadPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
       </Routes>
     </BrowserRouter>
   )

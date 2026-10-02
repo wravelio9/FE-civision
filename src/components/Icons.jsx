@@ -140,6 +140,23 @@ function Check() {
   )
 }
 
+function Phone() {
+  return (
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" aria-hidden="true">
+      <path d="M5 4h3.5l1.5 4-2 1.5a11 11 0 005.5 5.5L15 13l4 1.5V18a2 2 0 01-2 2A14 14 0 013 6a2 2 0 012-2Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function Mail() {
+  return (
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M4 7l8 6 8-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 // Bigger, colored folder illustration for the upload drop zone.
 // Unlike the icons above it has its own colors, so it ignores currentColor.
 function Folder() {
@@ -198,5 +215,7 @@ export const Icon = {
   Close,
   Menu,
   Check,
+  Phone,
+  Mail,
   Folder,
 }

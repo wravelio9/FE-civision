@@ -10,7 +10,7 @@ const NAV_TOP = [
 ]
 
 const NAV_MID = [
-  { key: 'profile', label: 'Profile', icon: Icon.Profile },
+  { key: 'profile', label: 'Profile', icon: Icon.Profile, to: '/profile' },
   { key: 'settings', label: 'Settings', icon: Icon.Settings },
   { key: 'help', label: 'Get Help', icon: Icon.Help },
 ]

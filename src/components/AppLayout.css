@@ -238,6 +238,48 @@
   outline-offset: 2px;
 }
 
+/* ---------- Hero pages (purple band behind the topbar) ---------- */
+/* <AppLayout hero> paints a purple band across the top of .main, behind the
+   topbar, and turns the topbar text white. Used by the Profile page. */
+.app-layout--hero {
+  --hero-color: #8987bd;
+  --hero-height: 160px;
+}
+
+.app-layout--hero .main {
+  position: relative; /* anchor for the band below */
+}
+
+.app-layout--hero .main::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--hero-height);
+  background: var(--hero-color);
+  border-bottom-left-radius: 18px;
+}
+
+.app-layout--hero .topbar__title,
+.app-layout--hero .icon-btn {
+  color: #fff;
+}
+
+.app-layout--hero .topbar__subtitle {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.app-layout--hero .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* When scrolled, keep the glass purple so the white text stays readable */
+.app-layout--hero .topbar--scrolled {
+  background-color: rgba(137, 135, 189, 0.88);
+  border-bottom-color: transparent;
+}
+
 /* ---------- Fit-screen pages (no page scrolling) ---------- */
 /* <AppLayout fitScreen> locks the page to the screen height, so the page itself
    can't scroll. The page's content has to shrink to fit instead (the Dashboard's
@@ -355,6 +397,10 @@
 
   .topbar__title {
     font-size: 20px;
+  }
+
+  .app-layout--hero {
+    --hero-height: 140px;
   }
 
   .topbar__actions {

@@ -1,0 +1,183 @@
+/* Every class here starts with "profile-" so it can't clash with other pages
+   (all CSS files end up in one global stylesheet).
+   The purple band behind the topbar comes from <AppLayout hero> (AppLayout.css). */
+
+/* ---------- Card ---------- */
+/* Spans the full width of .main (cancels its side padding), starts where the
+   purple band ends, and the avatar overlaps both. */
+.profile-card {
+  position: relative;
+  /* Offset = band height minus where the content starts under the topbar,
+     so the card's top edge meets the bottom of the purple band exactly. */
+  margin: var(--profile-card-offset, 38px) calc(-1 * var(--main-pad-x)) 0;
+  padding: 0 60px 26px;
+  background: #fff;
+  border-radius: 0 0 0 18px;
+  box-shadow: 0 6px 20px rgba(20, 20, 50, 0.05);
+}
+
+.profile-card__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ---------- Avatar ---------- */
+.profile-avatar {
+  flex-shrink: 0;
+  width: 126px;
+  height: 126px;
+  margin-top: -44px; /* rises into the purple band */
+  border-radius: 50%;
+  border: 4px solid #fff;
+  overflow: hidden;
+  background: linear-gradient(135deg, #6a5cd6, #2d2b6b);
+  box-shadow: 0 6px 18px rgba(20, 20, 50, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-avatar__initials {
+  font-size: 38px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+/* ---------- Name, role, contacts ---------- */
+.profile-info {
+  min-width: 0;
+  padding-top: 14px;
+}
+
+.profile-info__name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #5b58aa;
+  line-height: 1.2;
+}
+
+.profile-info__role {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4b4a9a;
+}
+
+.profile-info__contacts {
+  margin-top: 8px;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.profile-info__contacts a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #6a68b0;
+  text-decoration: none;
+}
+
+.profile-info__contacts a:hover {
+  color: var(--purple);
+  text-decoration: underline;
+}
+
+.profile-info__contacts a:focus-visible {
+  outline: 2px solid #8f88e6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- Stats ---------- */
+.profile-stats {
+  margin: 30px auto 0;
+  max-width: 560px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Label is first in the markup (dt before dd), but shown under the number */
+.profile-stat {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end; /* numbers line up at the top even if a label wraps */
+  align-items: center;
+  gap: 4px;
+  padding: 2px 12px;
+  text-align: center;
+}
+
+.profile-stat + .profile-stat {
+  border-left: 1px solid #c9c7e6;
+}
+
+.profile-stat__value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #4b4a9a;
+}
+
+.profile-stat__label {
+  font-size: 11px;
+  color: #9a98c9;
+}
+
+/* ---------- Phones ---------- */
+@media (max-width: 600px) {
+  .profile-card {
+    padding: 0 20px 22px;
+    --profile-card-offset: 39px;
+  }
+
+  /* Avatar centred above the name */
+  .profile-card__head {
+    flex-direction: column;
+    text-align: center;
+    gap: 6px;
+  }
+
+  .profile-avatar {
+    width: 104px;
+    height: 104px;
+  }
+
+  .profile-avatar__initials {
+    font-size: 32px;
+  }
+
+  .profile-info {
+    padding-top: 0;
+  }
+
+  .profile-info__contacts {
+    justify-content: center;
+  }
+
+  .profile-stats {
+    margin-top: 22px;
+  }
+
+  .profile-stat {
+    padding: 2px 6px;
+  }
+
+  .profile-stat__value {
+    font-size: 16px;
+  }
+
+  .profile-stat__label {
+    font-size: 10px;
+  }
+}

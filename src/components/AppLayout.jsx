@@ -10,7 +10,8 @@ const DESKTOP_QUERY = '(min-width: 901px)'
 // Shared shell for the pages after login: sidebar on the left,
 // topbar + the page's own content on the right.
 // fitScreen: lock the page to the screen height so it can't scroll (used by the Dashboard).
-export function AppLayout({ title, fitScreen = false, children }) {
+// hero: paint a purple band behind the topbar and turn the topbar text white (used by Profile).
+export function AppLayout({ title, fitScreen = false, hero = false, children }) {
   // Only used on small screens, where the sidebar slides in from the left.
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef(null)
@@ -54,7 +55,9 @@ export function AppLayout({ title, fitScreen = false, children }) {
   }, [])
 
   return (
-    <div className={`app-layout${fitScreen ? ' app-layout--fit-screen' : ''}`}>
+    <div
+      className={`app-layout${fitScreen ? ' app-layout--fit-screen' : ''}${hero ? ' app-layout--hero' : ''}`}
+    >
       <Sidebar open={menuOpen} onClose={closeMenu} />
 
       {/* Dark layer behind the open sidebar on small screens. Clicking it closes the menu. */}
