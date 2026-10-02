@@ -194,15 +194,41 @@
 
 /* Responsive: stack panels on small screens */
 @media (max-width: 640px) {
+  .page {
+    padding: 16px;
+  }
+
   .card {
     grid-template-columns: 1fr;
+    min-height: 0;
+    border-radius: 32px;
   }
 
   .card__illustration {
     min-height: 200px;
+    padding-top: 20px;
+  }
+
+  .officer-img {
+    max-width: 170px;
   }
 
   .card__form {
-    padding: 40px 28px;
+    margin-right: 0; /* the desktop margin-right: 500% would push the form out of the stacked card */
+    padding: 36px 24px;
+    border-radius: 32px;
+  }
+
+  .form__title {
+    font-size: 26px;
+    margin-bottom: 28px;
+  }
+
+  .form {
+    gap: 28px;
+  }
+
+  .form__support {
+    margin-top: 32px;
   }
 }

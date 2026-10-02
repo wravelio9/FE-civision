@@ -3,6 +3,15 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { AppLayout } from '../../components/AppLayout'
 import { Icon } from '../../components/Icons'
+import { DetectionResult } from './DetectionResult'
+import {
+  ensureModelReady,
+  detectObjects,
+  getActiveBackend,
+  ModelLoadError,
+} from '../../services/yolo/yoloInference'
+import { calculateViolation } from '../../services/violation/violationRule'
+import { buildViolationPayload, submitViolation } from '../../services/violation/submitViolation'
 // Placeholder officer. Save the officer from the Upload Media design as
 // src/assets/officer-upload.png, then change this line to import that file instead.
 import officerImg from '../../assets/officer-upload.png'
@@ -40,20 +49,29 @@ function checkFiles(fileList) {
 const isSameFile = (a, b) =>
   a.name === b.name && a.size === b.size && a.lastModified === b.lastModified
 
-// Sends the photos to the backend.
-// There's no upload endpoint yet, so for now this only waits 2 seconds and
-// pretends it worked. When the endpoint is ready, replace the body with
-// something like this (field name and path depend on your BE):
-//
-//   const body = new FormData()
-//   files.forEach((file) => body.append('photos', file))
-//   const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/upload`, {
-//     method: 'POST',
-//     body, // don't set Content-Type yourself, the browser adds it for FormData
-//   })
-//   if (!res.ok) throw new Error(`Upload gagal (${res.status}). Coba lagi.`)
-async function uploadPhotos(files) {
-  await new Promise((resolve) => setTimeout(resolve, 2000))
+// Loads a File into an <img> element we can run inference on.
+function loadImageElement(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => resolve({ img, url })
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error(`${file.name}: could not be read as an image.`))
+    }
+    img.src = url
+  })
+}
+
+// Turns a thrown error into a short, user-friendly message (no stack traces).
+function friendlyError(err) {
+  if (err instanceof ModelLoadError) {
+    if (err.kind === 'not-found') {
+      return 'AI model not found. Copy best.onnx into public/models/ and reload.'
+    }
+    return 'The AI model could not be loaded in this browser.'
+  }
+  return err?.message || 'Something went wrong during analysis.'
 }
 
 export default function UploadPage() {
@@ -63,24 +81,101 @@ export default function UploadPage() {
   const [files, setFiles] = useState([])
   const [errors, setErrors] = useState([])
   const [isDragging, setIsDragging] = useState(false)
-  // 'idle' -> 'uploading' (dark blur + spinner) -> 'success' (popup)
+  // 'idle' -> 'analyzing' (dark blur + spinner) -> 'success' (popup)
   const [status, setStatus] = useState('idle')
+  // Model loading UX: 'unloaded' | 'loading' | 'ready' | 'error'
+  const [modelState, setModelState] = useState('unloaded')
+  const [backend, setBackend] = useState(null)
+  const [analysisResults, setAnalysisResults] = useState([]) // DetectionResult items
+  const [progress, setProgress] = useState(null) // { done, total }
+
+  // Load the model once when the page opens, so the first Submit is fast.
+  // The UI stays usable while this runs in the background.
+  useEffect(() => {
+    let active = true
+    setModelState('loading')
+    ensureModelReady()
+      .then((activeBackend) => {
+        if (!active) return
+        setBackend(activeBackend)
+        setModelState('ready')
+      })
+      .catch(() => {
+        if (!active) return
+        // Don't surface a hard error yet; the user may not even submit. We retry
+        // on Submit and show the message there.
+        setModelState('error')
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Move keyboard focus into the popup when it opens
   useEffect(() => {
     if (status === 'success') dashboardBtnRef.current?.focus()
   }, [status])
 
+  // Clean up object URLs created for the result images.
+  useEffect(() => {
+    return () => {
+      analysisResults.forEach((r) => URL.revokeObjectURL(r.url))
+    }
+  }, [analysisResults])
+
   const handleSubmit = async () => {
     setErrors([])
-    setStatus('uploading')
+    setAnalysisResults([])
+    setStatus('analyzing')
+    setProgress({ done: 0, total: files.length })
+
     try {
-      await uploadPhotos(files)
+      // Make sure the model is ready (retry if the background load failed).
+      await ensureModelReady()
+      setBackend(getActiveBackend())
+      setModelState('ready')
+
+      const results = []
+      const newErrors = []
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        try {
+          const { img, url } = await loadImageElement(file)
+          const { detections, backend: usedBackend, inferenceMs } = await detectObjects(img)
+
+          // Detection -> violation (default: detection-only, flags nothing).
+          const result = calculateViolation(detections, { mode: 'detection-only' })
+
+          const imageSize = { width: img.naturalWidth, height: img.naturalHeight }
+
+          // Build the backend payload (adapter is dry-run until the endpoint is confirmed).
+          const payload = buildViolationPayload({
+            fileName: file.name,
+            imageSize,
+            result,
+            backend: usedBackend,
+            inferenceMs,
+          })
+          await submitViolation(payload) // dry-run by default; never blocks detection
+
+          results.push({ fileName: file.name, url, imageSize, result })
+        } catch (err) {
+          newErrors.push(friendlyError(err))
+        }
+        setProgress({ done: i + 1, total: files.length })
+      }
+
+      setAnalysisResults(results)
+      setErrors(newErrors)
       setStatus('success')
     } catch (err) {
-      // Close the overlay and show what went wrong, so the user can try again
+      // Model-level failure (couldn't load at all): back to the form with a message.
       setStatus('idle')
-      setErrors([err.message || 'Upload gagal. Coba lagi.'])
+      setModelState('error')
+      setErrors([friendlyError(err)])
+    } finally {
+      setProgress(null)
     }
   }
 
@@ -119,6 +214,18 @@ export default function UploadPage() {
     e.target.value = '' // lets the same file be picked again after it's removed
   }
 
+  // Short status line under the dropzone title for the model.
+  const modelStatusText =
+    modelState === 'loading'
+      ? 'Loading AI model...'
+      : modelState === 'ready'
+        ? `AI model ready${backend ? ` (${backend.toUpperCase()})` : ''}`
+        : modelState === 'error'
+          ? 'AI model unavailable — see message below'
+          : ''
+
+  const totalDetections = analysisResults.reduce((sum, r) => sum + r.result.detections.length, 0)
+
   return (
     <AppLayout title="Upload Media">
       <section className="upload-page">
@@ -131,6 +238,17 @@ export default function UploadPage() {
           <Icon.Folder />
           <h2 className="upload-dropzone__title">Drop Your Photos!</h2>
           <p className="upload-dropzone__hint">*Accepted formats: JPG, PNG (Max 10MB per file)</p>
+
+          {modelStatusText && (
+            <p
+              className={`upload-model-status upload-model-status--${modelState}`}
+              role="status"
+              aria-live="polite"
+            >
+              {modelState === 'loading' && <span className="upload-model-status__dot" />}
+              {modelStatusText}
+            </p>
+          )}
 
           <button
             type="button"
@@ -183,12 +301,29 @@ export default function UploadPage() {
               type="button"
               className="upload-submit"
               onClick={handleSubmit}
-              disabled={status === 'uploading'}
+              disabled={status === 'analyzing'}
             >
               Submit
             </button>
           )}
         </div>
+
+        {/* Detection results appear below the dropzone after analysis */}
+        {analysisResults.length > 0 && (
+          <div className="upload-results">
+            <div className="upload-results__head">
+              <h3 className="upload-results__title">Detection Results</h3>
+              <span className="upload-results__count">
+                {totalDetections} total detection{totalDetections === 1 ? '' : 's'}
+              </span>
+            </div>
+            <div className="upload-results__grid">
+              {analysisResults.map((item) => (
+                <DetectionResult key={`${item.fileName}-${item.url}`} item={item} />
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="upload-officer" aria-hidden="true">
           <img src={officerImg} alt="" />
@@ -199,10 +334,16 @@ export default function UploadPage() {
       {status !== 'idle' &&
         createPortal(
           <div className="upload-overlay">
-            {status === 'uploading' && (
+            {status === 'analyzing' && (
               <div className="upload-loading" role="status" aria-live="polite">
                 <span className="upload-spinner" aria-hidden="true" />
-                <p>Mengupload foto...</p>
+                <p>
+                  {modelState !== 'ready'
+                    ? 'Loading AI model...'
+                    : progress
+                      ? `Analyzing ${progress.done}/${progress.total}...`
+                      : 'Analyzing...'}
+                </p>
               </div>
             )}
 
@@ -217,16 +358,21 @@ export default function UploadPage() {
                   <Icon.Check />
                 </div>
                 <h2 id="upload-success-title" className="upload-success__title">
-                  Upload berhasil
+                  {totalDetections > 0 ? 'Analisis selesai' : 'Tidak ada PKL terdeteksi'}
                 </h2>
+                <p className="upload-success__subtitle">
+                  {totalDetections > 0
+                    ? `${totalDetections} deteksi pada ${analysisResults.length} gambar.`
+                    : 'Model berjalan, tapi tidak menemukan gerobak.'}
+                </p>
                 <div className="upload-success__actions">
                   <button
                     ref={dashboardBtnRef}
                     type="button"
                     className="upload-success__btn upload-success__btn--secondary"
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => setStatus('idle')}
                   >
-                    Kembali ke Dashboard
+                    Lihat Hasil
                   </button>
                   <button
                     type="button"

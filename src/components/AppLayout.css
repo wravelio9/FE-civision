@@ -6,6 +6,7 @@
   --muted: #9aa0b4;
   --line: #eef0f5;
   --bg: #f4f5f9;
+  --main-pad-x: 32px;   /* side padding of .main (smaller on phones) */
 
   display: grid;
   grid-template-columns: 240px 1fr;
@@ -118,7 +119,7 @@
 .main {
   display: flex;
   flex-direction: column; /* topbar on top, .page-content fills the rest */
-  padding: 0 32px 28px;
+  padding: 0 var(--main-pad-x) 28px;
   min-width: 0; /* keeps wide content from stretching the grid column (replaces overflow: hidden, which broke sticky) */
 }
 
@@ -164,10 +165,10 @@
   border-bottom: 1px solid transparent;
   transition: background-color 0.2s ease, border-color 0.2s ease, backdrop-filter 0.2s ease;
 
-  /* Stretch the bar to the edges of .main (which has 32px side padding) */
-  margin-left: -32px;
-  margin-right: -32px;
-  padding: 28px 32px 16px;
+  /* Stretch the bar to the edges of .main (cancels its side padding) */
+  margin-left: calc(-1 * var(--main-pad-x));
+  margin-right: calc(-1 * var(--main-pad-x));
+  padding: 28px var(--main-pad-x) 16px;
 
   display: flex;
   align-items: flex-start;
@@ -182,6 +183,19 @@
   backdrop-filter: blur(12px) saturate(160%);
   -webkit-backdrop-filter: blur(12px) saturate(160%); /* Safari */
   border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+.topbar__start {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Hamburger button: only shown on small screens (see Responsive below).
+   ".topbar" in front makes this win over .icon-btn's display: inline-flex. */
+.topbar .topbar__menu {
+  display: none;
 }
 
 .topbar__title {
@@ -216,6 +230,14 @@
   background: #eeecfb;
 }
 
+/* Keyboard focus ring in the theme color (replaces the browser's black outline) */
+.icon-btn:focus-visible,
+.sidebar__close:focus-visible,
+.nav-item:focus-visible {
+  outline: 2px solid #8f88e6;
+  outline-offset: 2px;
+}
+
 /* ---------- Fit-screen pages (no page scrolling) ---------- */
 /* <AppLayout fitScreen> locks the page to the screen height, so the page itself
    can't scroll. The page's content has to shrink to fit instead (the Dashboard's
@@ -241,20 +263,109 @@
   }
 }
 
-/* ---------- Responsive ---------- */
+/* Close button inside the sidebar: only shown on small screens */
+.sidebar__close {
+  display: none;
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.sidebar__close:hover {
+  color: var(--purple);
+  background: #f6f5fd;
+}
+
+/* Dark layer behind the open sidebar (small screens only) */
+.sidebar-backdrop {
+  display: none;
+}
+
+/* ---------- Responsive: tablets + phones ---------- */
+/* The sidebar is hidden off-screen on the left and slides in when the
+   hamburger button in the topbar is pressed. */
 @media (max-width: 900px) {
   .app-layout {
     grid-template-columns: 1fr;
   }
+
   .sidebar {
-    position: static; /* on small screens the sidebar becomes a top row, so don't pin it */
-    height: auto;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;                      /* above the sticky topbar */
+    width: min(280px, 85vw);
+    height: 100vh;
+    height: 100dvh;                   /* mobile browsers: ignore the address bar */
+    box-shadow: 8px 0 30px rgba(20, 20, 50, 0.18);
+
+    /* Closed: pushed out to the left. visibility: hidden also keeps its links
+       out of the Tab order and screen readers while it's off-screen. */
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 0.3s ease, visibility 0s linear 0.3s;
   }
-  .nav-item--logout {
-    margin-top: 0;
-    margin-left: auto;
+
+  /* Open: slides in from left to right */
+  .sidebar--open {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.3s ease, visibility 0s;
+  }
+
+  .sidebar__close {
+    display: inline-flex;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;                      /* below the sidebar, above everything else */
+    background: rgba(17, 16, 40, 0.45);
+    opacity: 0;
+    pointer-events: none;             /* invisible layer must not block clicks */
+    transition: opacity 0.3s ease;
+  }
+
+  .sidebar-backdrop--visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .topbar .topbar__menu {
+    display: inline-flex;
+  }
+}
+
+/* Phones: tighter spacing and smaller heading */
+@media (max-width: 600px) {
+  .app-layout {
+    --main-pad-x: 16px;
+  }
+
+  .topbar {
+    padding-top: 18px;
+    margin-bottom: 16px;
+  }
+
+  .topbar__title {
+    font-size: 20px;
+  }
+
+  .topbar__actions {
+    gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar--open,
+  .sidebar-backdrop {
+    transition: none;
   }
 }

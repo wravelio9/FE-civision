@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Icon } from './Icons'
 
@@ -38,14 +39,31 @@ function NavItem({ item }) {
   )
 }
 
-export function Sidebar() {
+// open / onClose are only used on small screens, where the sidebar slides in
+// from the left. On desktop it's always visible and these do nothing.
+export function Sidebar({ open = false, onClose }) {
   const navigate = useNavigate()
+  const closeButtonRef = useRef(null)
+
+  // Move keyboard focus into the sidebar when it slides in
+  useEffect(() => {
+    if (open) closeButtonRef.current?.focus()
+  }, [open])
 
   return (
-    <aside className="sidebar">
+    <aside id="app-sidebar" className={`sidebar${open ? ' sidebar--open' : ''}`}>
       <div className="sidebar__logo">
         <span className="sidebar__logo-mark" />
         <span className="sidebar__logo-text">Civision</span>
+        <button
+          ref={closeButtonRef}
+          type="button"
+          className="sidebar__close"
+          aria-label="Close menu"
+          onClick={onClose}
+        >
+          <Icon.Close />
+        </button>
       </div>
 
       <nav className="sidebar__nav">

@@ -58,6 +58,127 @@
   background: #4a40b8;
 }
 
+/* ---------- Model loading status ---------- */
+.upload-model-status {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.upload-model-status--loading {
+  color: #6a63c0;
+}
+
+.upload-model-status--ready {
+  color: #2f9e5f;
+}
+
+.upload-model-status--error {
+  color: #c0392b;
+}
+
+.upload-model-status__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(106, 99, 192, 0.3);
+  border-top-color: #6a63c0;
+  animation: upload-spin 0.8s linear infinite;
+}
+
+/* ---------- Detection results ---------- */
+.upload-results {
+  margin-top: 24px;
+}
+
+.upload-results__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.upload-results__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--purple-dark);
+}
+
+.upload-results__count {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.upload-results__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.detect-result {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(20, 20, 50, 0.06);
+}
+
+.detect-result__canvas-wrap {
+  position: relative;
+  line-height: 0;
+  background: #f0f0f6;
+}
+
+.detect-result__img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* The canvas sits exactly on top of the image and holds the boxes */
+.detect-result__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.detect-result__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+}
+
+.detect-result__name {
+  font-size: 12px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detect-result__count {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5a50c3;
+}
+
+.detect-result__count--empty {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.detect-result__violations {
+  color: #e0485a;
+}
+
 /* ---------- Errors + selected files ---------- */
 .upload-errors {
   margin-top: 14px;
@@ -226,6 +347,12 @@
   color: #2d2b6b;
 }
 
+.upload-success__subtitle {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #8a86c0;
+}
+
 .upload-success__actions {
   margin-top: 24px;
   display: flex;
@@ -336,5 +463,22 @@
 @media (max-width: 900px) {
   .upload-officer {
     display: none;
+  }
+}
+
+/* Phones */
+@media (max-width: 600px) {
+  .upload-dropzone {
+    min-height: max(320px, calc(100vh - 180px));
+    padding: 24px 16px;
+    border-radius: 22px;
+  }
+
+  .upload-dropzone__title {
+    font-size: 22px;
+  }
+
+  .upload-success {
+    padding: 28px 20px 22px;
   }
 }

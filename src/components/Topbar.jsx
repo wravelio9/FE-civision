@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Icon } from './Icons'
 import { Time } from './Time'
 
-export function Topbar({ title }) {
+// onMenuClick opens the sidebar on small screens (the hamburger button is hidden on desktop).
+export function Topbar({ title, menuOpen = false, menuButtonRef, onMenuClick }) {
   // True once the page is scrolled down. Switches on the glass background.
   const [scrolled, setScrolled] = useState(false)
 
@@ -22,12 +23,25 @@ export function Topbar({ title }) {
 
   return (
     <header className={`topbar${scrolled ? ' topbar--scrolled' : ''}`}>
-      <div>
-        <h1 className="topbar__title">{title}</h1>
-        <p className="topbar__subtitle">
-          <Time />
-          <span className="topbar__date"> - {today}</span>
-        </p>
+      <div className="topbar__start">
+        <button
+          ref={menuButtonRef}
+          type="button"
+          className="icon-btn topbar__menu"
+          aria-label="Open menu"
+          aria-controls="app-sidebar"
+          aria-expanded={menuOpen}
+          onClick={onMenuClick}
+        >
+          <Icon.Menu />
+        </button>
+        <div>
+          <h1 className="topbar__title">{title}</h1>
+          <p className="topbar__subtitle">
+            <Time />
+            <span className="topbar__date"> - {today}</span>
+          </p>
+        </div>
       </div>
       <div className="topbar__actions">
         <button type="button" className="icon-btn" aria-label="Notifications">

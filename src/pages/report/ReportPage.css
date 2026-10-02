@@ -252,5 +252,11 @@
   .report-stats {
     grid-template-columns: repeat(2, 1fr);
     row-gap: 14px;
+    padding: 16px 18px;
+  }
+
+  /* Pagination centered under the table */
+  .report-pagination {
+    justify-content: center;
   }
 }

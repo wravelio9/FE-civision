@@ -289,3 +289,47 @@
     max-width: 100%;
   }
 }
+
+/* Phones */
+@media (max-width: 600px) {
+  .banner {
+    min-height: 0;
+    padding: 22px 20px;
+  }
+
+  .banner__greeting {
+    font-size: 22px;
+  }
+
+  .content {
+    gap: 24px;
+    margin-top: 22px;
+  }
+
+  /* Title on its own line, search box full width underneath */
+  .review__head {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .review__title {
+    font-size: 20px;
+  }
+
+  .search {
+    flex-basis: 100%;
+  }
+
+  .table {
+    font-size: 12px;
+  }
+
+  .table th:first-child,
+  .table td:first-child {
+    padding-left: 16px;
+  }
+
+  .map {
+    min-height: 240px;
+  }
+}
