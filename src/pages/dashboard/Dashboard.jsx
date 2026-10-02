@@ -21,7 +21,7 @@ export default function Dashboard() {
       {/* Welcome banner */}
       <section className="banner">
         <div className="banner__text">
-          <h2 className="banner__greeting">Good Morning, Shavel</h2>
+          <h2 className="banner__greeting">Good Morning, John Doe</h2>
           <p className="banner__desc" onClick={() => navigate('/report')}>
             You currently have <a href="#incidents">10 new incidents</a> queued up for review.
             <br />

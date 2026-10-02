@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import LoginPage from './pages/login/LoginPage.jsx'
 import Dashboard from './pages/dashboard/Dashboard.jsx'
 import ReportPage from './pages/report/ReportPage.jsx'
-import UploadPage from './pages/upload/UploadPage.jsx'
+import UploadPage from './pages/upload/jsx/UploadPage.jsx'
 
 export default function App() {
   return (

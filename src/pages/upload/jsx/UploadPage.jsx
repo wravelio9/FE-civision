@@ -1,21 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { AppLayout } from '../../components/AppLayout'
-import { Icon } from '../../components/Icons'
+import { AppLayout } from '../../../components/AppLayout'
+import { Icon } from '../../../components/Icons'
 import { DetectionResult } from './DetectionResult'
 import {
   ensureModelReady,
   detectObjects,
   getActiveBackend,
   ModelLoadError,
-} from '../../services/yolo/yoloInference'
-import { calculateViolation } from '../../services/violation/violationRule'
-import { buildViolationPayload, submitViolation } from '../../services/violation/submitViolation'
+} from '../../../services/yolo/yoloInference'
+import { calculateViolation } from '../../../services/violation/violationRule'
+import { buildViolationPayload, submitViolation } from '../../../services/violation/submitViolation'
 // Placeholder officer. Save the officer from the Upload Media design as
 // src/assets/officer-upload.png, then change this line to import that file instead.
-import officerImg from '../../assets/officer-upload.png'
-import './UploadPage.css'
+import officerImg from '../../../assets/officer-upload.png'
+import '../css/UploadPage.css'
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png']
 const ACCEPTED_EXTENSIONS = /\.(jpe?g|png)$/i
@@ -306,6 +306,10 @@ export default function UploadPage() {
               Submit
             </button>
           )}
+
+          {/* <div className="upload-officer" aria-hidden="true">
+            <img src={officerImg} alt="" />
+          </div> */}
         </div>
 
         {/* Detection results appear below the dropzone after analysis */}
@@ -325,9 +329,9 @@ export default function UploadPage() {
           </div>
         )}
 
-        <div className="upload-officer" aria-hidden="true">
+        {/* <div className="upload-officer" aria-hidden="true">
           <img src={officerImg} alt="" />
-        </div>
+        </div> */}
       </section>
 
       {/* Rendered straight into <body> so it covers the sidebar and topbar too */}
