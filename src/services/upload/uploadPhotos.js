@@ -16,7 +16,7 @@
 // lets the UI show progress and keeps one failed photo from failing the rest.
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
-const ENDPOINT = `${BASE_URL}/upload`
+const ENDPOINT = `${BASE_URL}/api/upload`
 
 // Stay safely under Vercel's ~4.5 MB request limit (multipart adds a little overhead).
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
