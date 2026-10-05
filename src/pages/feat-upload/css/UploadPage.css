@@ -177,6 +177,24 @@
   font-weight: 500;
 }
 
+/* Per-detection labels under a backend result, e.g. "gerobak 94%" */
+.detect-result__list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 14px 12px;
+}
+
+.detect-result__list li {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eeecfb;
+  color: #5a50c3;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .detect-result__violations {
   color: #e0485a;
 }
