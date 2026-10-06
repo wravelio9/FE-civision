@@ -239,24 +239,107 @@
   cursor: default;
 }
 
-/* ---------- Responsive ---------- */
+/* ---------- Responsive: phones ---------- */
 @media (max-width: 700px) {
+  /* The stats area sits on a white band that reaches the top of the screen
+     (behind the transparent topbar) and the screen edges, like the design.
+     The band is a pseudo-element behind the card, so no markup changes. */
   .report-hero {
+    position: relative;
+    display: block;
     padding-right: 0;
+    margin-bottom: 34px;
   }
 
-  .report-hero__officer {
-    display: none;
+  .report-hero::before {
+    content: '';
+    position: absolute;
+    top: -220px;                                 /* up behind the topbar */
+    bottom: -18px;
+    left: calc(-1 * var(--main-pad-x));          /* out to the screen edges */
+    right: calc(-1 * var(--main-pad-x));
+    background: #fff;
+    z-index: -1;
   }
 
+  /* 2 x 2 grid, filled column by column:
+     Total    | Invalid
+     Valid    | Unverified */
   .report-stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, max-content);
+    grid-template-rows: repeat(2, auto);
+    grid-auto-flow: column;
+    column-gap: 26px;
     row-gap: 14px;
-    padding: 16px 18px;
+    margin: 0 22px 0 0;              /* card stops short of the edge; the officer covers the gap */
+    padding: 22px 32% 22px 22px;     /* right padding keeps the numbers clear of the officer */
+    box-shadow: 0 8px 24px rgba(20, 20, 50, 0.1);
+  }
+
+  .report-stat__value {
+    font-size: 21px;
+  }
+
+  /* Officer stands on the card's bottom edge, overlaps its right side and
+     reaches the screen edge, with the head a little above the card. */
+  .report-hero__officer {
+    display: block;
+    position: absolute;
+    right: calc(-1 * var(--main-pad-x));
+    bottom: 0;
+    height: calc(100% + 18px);
+    margin: 0;
+    pointer-events: none;
+  }
+
+  /* Narrower table so #, Location and Date fit before it scrolls sideways */
+  .report-table {
+    min-width: 560px;
+  }
+
+  .report-table td {
+    padding: 11px 10px;
+  }
+
+  /* Visible thin scrollbar under the table, so it's clear it scrolls sideways */
+  .report-table-wrap {
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #c4c4d4 transparent;
+  }
+
+  .report-table-wrap::-webkit-scrollbar {
+    height: 5px;
+  }
+
+  .report-table-wrap::-webkit-scrollbar-thumb {
+    background: #c4c4d4;
+    border-radius: 999px;
   }
 
   /* Pagination centered under the table */
   .report-pagination {
     justify-content: center;
+  }
+}
+
+/* Very narrow phones: smaller numbers so the 2 x 2 grid still fits */
+@media (max-width: 360px) {
+  .report-stats {
+    column-gap: 16px;
+    padding-left: 16px;
+  }
+
+  .report-stat__value {
+    font-size: 18px;
+  }
+
+  .report-stat__label {
+    font-size: 9px;
+  }
+
+  /* Smaller officer so the radio doesn't touch "Unverified Reports" */
+  .report-hero__officer {
+    height: calc(100% + 4px);
   }
 }

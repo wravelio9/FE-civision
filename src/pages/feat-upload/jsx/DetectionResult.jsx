@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 
+// How the backend found the coordinates (coordinateSource).
+const SOURCE_LABELS = {
+  gps_exif: 'GPS foto',
+  ocr: 'OCR',
+  manual: 'manual',
+}
+
 // Draws one analysed image with its bounding boxes, plus a small summary.
 // `item` = { fileName, url, imageSize:{width,height}, result } where result comes
 // from calculateViolation(). Coordinates in result.detections[].bbox are in
@@ -100,6 +107,22 @@ export function DetectionResult({ item }) {
           </span>
         )}
       </div>
+
+      {/* What the backend sent back for this photo (coordinates from EXIF/OCR) */}
+      {(item.backend || item.backendError) && (
+        <div className="detect-result__backend">
+          {item.backendError ? (
+            <span className="detect-result__backend--error">Gagal disimpan: {item.backendError}</span>
+          ) : item.backend.coordinate ? (
+            <span>
+              Lokasi: {item.backend.coordinate.lat.toFixed(5)}, {item.backend.coordinate.lon.toFixed(5)}{' '}
+              <span className="detect-result__source">({SOURCE_LABELS[item.backend.coordinateSource] ?? item.backend.coordinateSource})</span>
+            </span>
+          ) : (
+            <span className="detect-result__backend--muted">Tersimpan, koordinat tidak ditemukan.</span>
+          )}
+        </div>
+      )}
     </div>
   )
 }

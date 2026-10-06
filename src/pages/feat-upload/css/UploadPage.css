@@ -177,6 +177,22 @@
   font-weight: 500;
 }
 
+/* Backend response line under a result card (coordinates or error) */
+.detect-result__backend {
+  padding: 0 14px 12px;
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.detect-result__source,
+.detect-result__backend--muted {
+  color: var(--muted);
+}
+
+.detect-result__backend--error {
+  color: #c0392b;
+}
+
 /* Per-detection labels under a backend result, e.g. "gerobak 94%" */
 .detect-result__list {
   list-style: none;

@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { AppLayout } from '../../../components/AppLayout'
 import { Icon } from '../../../components/Icons'
-import { UploadResult } from './UploadResult'
-import { uploadPhoto } from '../../../services/upload/uploadPhotos'
+import { DetectionResult } from './DetectionResult'
+import { ensureModelReady, detectObjects, ModelLoadError } from '../../../services/yolo/yoloInference'
+import { sendPhotoToBackend } from '../../../services/upload/uploadPhotos'
 // Placeholder officer. Save the officer from the Upload Media design as
 // src/assets/officer-upload.png, then change this line to import that file instead.
 import officerImg from '../../../assets/officer-upload.png'
@@ -42,9 +43,28 @@ function checkFiles(fileList) {
 const isSameFile = (a, b) =>
   a.name === b.name && a.size === b.size && a.lastModified === b.lastModified
 
+// Loads a File into an <img> element the model can read.
+function loadImageElement(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => resolve({ img, url })
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('tidak bisa dibaca sebagai gambar.'))
+    }
+    img.src = url
+  })
+}
+
 // Turns a thrown error into a short, user-friendly message (no stack traces).
 function friendlyError(err) {
-  return err?.message || 'Terjadi kesalahan saat mengupload foto.'
+  if (err instanceof ModelLoadError) {
+    return err.kind === 'not-found'
+      ? 'Model AI tidak ditemukan. Pastikan best.onnx ada di public/models/.'
+      : 'Model AI tidak bisa dimuat di browser ini.'
+  }
+  return err?.message || 'terjadi kesalahan.'
 }
 
 export default function UploadPage() {
@@ -54,10 +74,17 @@ export default function UploadPage() {
   const [files, setFiles] = useState([])
   const [errors, setErrors] = useState([])
   const [isDragging, setIsDragging] = useState(false)
-  // 'idle' -> 'uploading' (dark blur + spinner) -> 'success' (popup)
+  // 'idle' -> 'predicting' (ONNX in the browser) -> 'uploading' (backend OCR)
+  //        -> 'success' (popup)
   const [status, setStatus] = useState('idle')
-  const [analysisResults, setAnalysisResults] = useState([]) // UploadResult items
+  const [analysisResults, setAnalysisResults] = useState([]) // DetectionResult items
   const [progress, setProgress] = useState(null) // { done, total }
+
+  // Start loading best.onnx as soon as the page opens, so Submit doesn't wait
+  // for the download. Errors are ignored here; Submit retries and reports them.
+  useEffect(() => {
+    ensureModelReady().catch(() => {})
+  }, [])
 
   // Move keyboard focus into the popup when it opens
   useEffect(() => {
@@ -67,45 +94,97 @@ export default function UploadPage() {
   // Free the preview URLs when the results are replaced or the page closes.
   useEffect(() => {
     return () => {
-      analysisResults.forEach((r) => URL.revokeObjectURL(r.previewUrl))
+      analysisResults.forEach((r) => URL.revokeObjectURL(r.url))
     }
   }, [analysisResults])
 
-  // Submit: send each photo to the backend (POST /upload). The backend runs the
-  // gerobak detection and returns the result for that photo.
+  // Submit:
+  //   1. Predict every photo with best.onnx in the browser. All results are kept
+  //      in one variable, `predictions`.
+  //   2. Send each photo + its detections to the backend, which reads the
+  //      coordinates (EXIF / OCR) and saves the analysis.
+  //   3. Show the predictions together with the backend's response.
   const handleSubmit = async () => {
     setErrors([])
     setAnalysisResults([])
-    setStatus('uploading')
-    setProgress({ done: 0, total: files.length })
-
-    const results = []
     const newErrors = []
 
-    // One photo at a time: shows progress, and one failed photo doesn't fail the rest.
+    // ---------- 1. Predict with best.onnx ----------
+    setStatus('predicting')
+    setProgress({ done: 0, total: files.length })
+
+    try {
+      await ensureModelReady()
+    } catch (err) {
+      setStatus('idle')
+      setProgress(null)
+      setErrors([friendlyError(err)])
+      return
+    }
+
+    // One entry per photo that was predicted successfully:
+    // { file, url, imageSize, detections, inferenceMs }
+    const predictions = []
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       try {
-        const result = await uploadPhoto(file)
-        results.push({ ...result, previewUrl: URL.createObjectURL(file) })
+        const { img, url } = await loadImageElement(file)
+        const { detections, inferenceMs } = await detectObjects(img)
+        predictions.push({
+          file,
+          url,
+          imageSize: { width: img.naturalWidth, height: img.naturalHeight },
+          detections,
+          inferenceMs,
+        })
       } catch (err) {
-        newErrors.push(friendlyError(err))
+        newErrors.push(`${file.name}: ${friendlyError(err)}`)
       }
       setProgress({ done: i + 1, total: files.length })
+    }
+
+    // ---------- 2. Send to the backend ----------
+    setStatus('uploading')
+    setProgress({ done: 0, total: predictions.length })
+
+    const results = []
+    for (let i = 0; i < predictions.length; i++) {
+      const prediction = predictions[i]
+      let backend = null
+      let backendError = null
+      try {
+        backend = await sendPhotoToBackend(prediction.file, prediction.detections)
+      } catch (err) {
+        backendError = friendlyError(err)
+        newErrors.push(`${prediction.file.name}: ${backendError}`)
+      }
+
+      results.push({
+        fileName: prediction.file.name,
+        url: prediction.url,
+        imageSize: prediction.imageSize,
+        result: {
+          detections: prediction.detections.map((d) => ({ ...d, isViolation: false })),
+          violationCount: backend?.totalViolations ?? 0,
+        },
+        backend,
+        backendError,
+      })
+      setProgress({ done: i + 1, total: predictions.length })
     }
 
     setProgress(null)
     setAnalysisResults(results)
     setErrors(newErrors)
 
-    if (results.length === 0) {
-      // Nothing got through (server down, every photo rejected, ...):
+    if (!results.some((r) => r.backend)) {
+      // Nothing reached the backend (server down, every photo rejected, ...):
       // back to the form so the user can read the errors and try again.
       setStatus('idle')
       return
     }
 
-    // Uploaded successfully: clear the selection so the same photos aren't sent twice.
+    // Saved: clear the selection so the same photos aren't sent twice.
     setFiles([])
     setStatus('success')
   }
@@ -145,8 +224,10 @@ export default function UploadPage() {
     e.target.value = '' // lets the same file be picked again after it's removed
   }
 
-  const totalDetections = analysisResults.reduce((sum, r) => sum + r.detections.length, 0)
+  const totalDetections = analysisResults.reduce((sum, r) => sum + r.result.detections.length, 0)
+  const savedCount = analysisResults.filter((r) => r.backend).length
   const failedCount = errors.length
+  const isBusy = status === 'predicting' || status === 'uploading'
 
   return (
     <AppLayout title="Upload Media">
@@ -212,7 +293,7 @@ export default function UploadPage() {
               type="button"
               className="upload-submit"
               onClick={handleSubmit}
-              disabled={status === 'uploading'}
+              disabled={isBusy}
             >
               Submit
             </button>
@@ -234,7 +315,7 @@ export default function UploadPage() {
             </div>
             <div className="upload-results__grid">
               {analysisResults.map((item) => (
-                <UploadResult key={item.previewUrl} item={item} />
+                <DetectionResult key={item.url} item={item} />
               ))}
             </div>
           </div>
@@ -249,13 +330,14 @@ export default function UploadPage() {
       {status !== 'idle' &&
         createPortal(
           <div className="upload-overlay">
-            {status === 'uploading' && (
+            {isBusy && (
               <div className="upload-loading" role="status" aria-live="polite">
                 <span className="upload-spinner" aria-hidden="true" />
                 <p>
+                  {status === 'predicting' ? 'Mendeteksi gerobak' : 'Mengirim ke server'}
                   {progress && progress.total > 1
-                    ? `Mengupload foto ${Math.min(progress.done + 1, progress.total)}/${progress.total}...`
-                    : 'Mengupload foto...'}
+                    ? ` ${Math.min(progress.done + 1, progress.total)}/${progress.total}...`
+                    : '...'}
                 </p>
               </div>
             )}
@@ -275,8 +357,8 @@ export default function UploadPage() {
                 </h2>
                 <p className="upload-success__subtitle">
                   {totalDetections > 0
-                    ? `${totalDetections} gerobak terdeteksi pada ${analysisResults.length} foto.`
-                    : `${analysisResults.length} foto terkirim. Tidak ada gerobak terdeteksi.`}
+                    ? `${totalDetections} gerobak terdeteksi, ${savedCount} foto tersimpan.`
+                    : `${savedCount} foto tersimpan. Tidak ada gerobak terdeteksi.`}
                   {failedCount > 0 && ` ${failedCount} foto gagal, lihat detail di halaman.`}
                 </p>
                 <div className="upload-success__actions">
