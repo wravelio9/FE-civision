@@ -1,19 +1,22 @@
-// Sends photos to the backend's POST /upload endpoint.
+// Upload flow (agreed with the team):
+//   FE receives photo -> runs best.onnx in the browser -> sends photo + detections
+//   to the backend -> backend stores it (coordinate, zone check, violation) in the DB.
 //
-// Backend contract (BE - civision, src/routes/main.route.ts):
-//   POST {VITE_API_BASE_URL}/upload
-//   multipart/form-data, field name "files" (up to 20), no auth.
-//   200/502 -> { success, data: { total, succeeded, failed,
-//                                  results: [{ filename, mimetype, result }],
-//                                  errors:  [{ filename, error, detail? }] } }
-//   400/500 -> { success: false, error: "<message>" }
-//   `result` is the raw Roboflow workflow output:
-//     result.outputs[0].annotated_image.value     -> base64 JPEG with the masks drawn
-//     result.outputs[0].predictions.predictions   -> array of detections
+// Backend contract (BE-civision, src/controller/upload.controller.ts):
+//   POST {VITE_API_BASE_URL}/api/upload   multipart/form-data, no auth
+//     files   : the photo
+//     payload : JSON string { detections: [{ label, confidence, bbox:{x1,y1,x2,y2} }],
+//                             manualLatLon?: { lat, lon } }
+//   201 -> { success: true, data: [{ mediaId, filename, coordinateSource, coordinate,
+//                                    detectionCount,
+//                                    result: { analysisId, totalDetections,
+//                                              totalViolations, unknownLocation } }] }
+//   4xx/5xx -> { success: false, error: "<message>" }
 //
 // We send ONE request per photo. Vercel limits a request body to ~4.5 MB, so a
 // single request with several photos would easily be rejected. One-by-one also
 // lets the UI show progress and keeps one failed photo from failing the rest.
+import { detectObjects } from '../yolo/yoloInference.js'
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
 const ENDPOINT = `${BASE_URL}/api/upload`
@@ -32,7 +35,7 @@ export class UploadError extends Error {
 }
 
 // Photos larger than the request limit are re-encoded as a smaller JPEG.
-// Smaller photos are sent untouched (keeps original quality and metadata).
+// Smaller photos are sent untouched (keeps original quality and EXIF GPS).
 async function shrinkIfTooLarge(file) {
   if (file.size <= MAX_UPLOAD_BYTES) return file
 
@@ -65,36 +68,54 @@ async function readBody(res) {
   }
 }
 
-// Pulls the parts the UI needs out of one Roboflow workflow result.
-function parseRoboflowResult(result) {
-  const output = Array.isArray(result?.outputs) ? result.outputs[0] : null
-  const annotated = output?.annotated_image
-  const rawPredictions = output?.predictions?.predictions
+// Runs best.onnx on the photo. Boxes come back in ORIGINAL-image pixels.
+async function runDetection(file) {
+  let bitmap
+  try {
+    bitmap = await createImageBitmap(file)
+  } catch (err) {
+    throw new UploadError(`${file.name}: foto tidak bisa dibaca browser.`, { cause: err })
+  }
 
-  const annotatedImageUrl =
-    annotated?.type === 'base64' && typeof annotated.value === 'string'
-      ? `data:image/jpeg;base64,${annotated.value}`
-      : null
-
-  const detections = Array.isArray(rawPredictions)
-    ? rawPredictions.map((p) => ({
-        className: p.class ?? p.class_name ?? 'gerobak',
-        confidence: typeof p.confidence === 'number' ? p.confidence : null,
-      }))
-    : []
-
-  return { annotatedImageUrl, detections }
+  try {
+    const imageSize = { width: bitmap.width, height: bitmap.height }
+    const { detections } = await detectObjects(bitmap)
+    return { detections, imageSize }
+  } catch (err) {
+    console.error('[onnx] deteksi gagal:', err, err?.cause)
+    const detail = err?.cause?.message || err?.message || 'unknown error'
+    throw new UploadError(`${file.name}: model AI (best.onnx) gagal dijalankan. ${detail}`, {
+      cause: err,
+    })
+  } finally {
+    bitmap.close?.()
+  }
 }
 
-// Uploads one photo. Resolves to { fileName, annotatedImageUrl, detections }.
+// Detects gerobak with ONNX, then uploads photo + detections.
+// Resolves to { fileName, imageSize, detections, result, server }.
 export async function uploadPhoto(file) {
   if (!BASE_URL) {
     throw new UploadError('Alamat backend belum diatur (VITE_API_BASE_URL di .env).')
   }
 
+  // 1) ONNX in the browser.
+  const { detections, imageSize } = await runDetection(file)
+
+  // 2) Photo + detections to the backend (field names must match the backend).
   const toSend = await shrinkIfTooLarge(file)
   const body = new FormData()
-  body.append('files', toSend, toSend.name) // field name must be "files"
+  body.append('files', toSend, toSend.name)
+  body.append(
+    'payload',
+    JSON.stringify({
+      detections: detections.map((d) => ({
+        label: d.className,
+        confidence: d.confidence,
+        bbox: d.bbox,
+      })),
+    }),
+  )
 
   let res
   try {
@@ -116,19 +137,23 @@ export async function uploadPhoto(file) {
       status: res.status,
     })
   }
-  if (!res.ok && !json.data) {
-    // 400 / 500: { success: false, error }
-    throw new UploadError(json.error || `Upload gagal (HTTP ${res.status}).`, { status: res.status })
-  }
-
-  const item = json.data?.results?.[0]
-  if (!item) {
-    // The photo reached the server but the AI step failed (HTTP 502 + errors[]).
-    const reason = json.data?.errors?.[0]?.error
-    throw new UploadError(`${file.name}: ${reason || 'gagal diproses di server.'}`, {
+  if (!res.ok || !json.success) {
+    throw new UploadError(`${file.name}: ${json.error || `upload gagal (HTTP ${res.status}).`}`, {
       status: res.status,
     })
   }
 
-  return { fileName: file.name, ...parseRoboflowResult(item.result) }
+  const server = Array.isArray(json.data) ? json.data[0] : null
+  if (!server) {
+    throw new UploadError(`${file.name}: server tidak mengembalikan hasil.`, { status: res.status })
+  }
+
+  return {
+    fileName: file.name,
+    imageSize,
+    detections,
+    // Shape expected by <DetectionResult />.
+    result: { detections, violationCount: server.result?.totalViolations ?? 0 },
+    server,
+  }
 }

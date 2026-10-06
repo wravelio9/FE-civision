@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { AppLayout } from '../../../components/AppLayout'
 import { Icon } from '../../../components/Icons'
-import { UploadResult } from './UploadResult'
+import { DetectionResult } from './DetectionResult'
 import { uploadPhoto } from '../../../services/upload/uploadPhotos'
 // Placeholder officer. Save the officer from the Upload Media design as
 // src/assets/officer-upload.png, then change this line to import that file instead.
@@ -71,8 +71,8 @@ export default function UploadPage() {
     }
   }, [analysisResults])
 
-  // Submit: send each photo to the backend (POST /upload). The backend runs the
-  // gerobak detection and returns the result for that photo.
+  // Submit: for each photo, run best.onnx in the browser, then send the photo +
+  // detections to the backend (POST /api/upload), which stores it in the DB.
   const handleSubmit = async () => {
     setErrors([])
     setAnalysisResults([])
@@ -87,7 +87,8 @@ export default function UploadPage() {
       const file = files[i]
       try {
         const result = await uploadPhoto(file)
-        results.push({ ...result, previewUrl: URL.createObjectURL(file) })
+        const previewUrl = URL.createObjectURL(file)
+        results.push({ ...result, previewUrl, url: previewUrl })
       } catch (err) {
         newErrors.push(friendlyError(err))
       }
@@ -234,7 +235,7 @@ export default function UploadPage() {
             </div>
             <div className="upload-results__grid">
               {analysisResults.map((item) => (
-                <UploadResult key={item.previewUrl} item={item} />
+                <DetectionResult key={item.previewUrl} item={item} />
               ))}
             </div>
           </div>
