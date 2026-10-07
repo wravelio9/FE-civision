@@ -2,6 +2,7 @@ import { useState, useEffect, createElement } from 'react'
 import { AppLayout } from '../../components/AppLayout'
 import { Icon } from '../../components/Icons'
 import { useNavigate } from 'react-router-dom'
+import MapView from '../feat-maps/mapsview'
 import Officer from '../../assets/officer-dashboard.png'
 import './Dashboard.css'
 
@@ -80,10 +81,11 @@ export default function Dashboard() {
         </div>
 
         <div className="map" aria-label="Map of incident locations">
+          <MapView />
           <div className="map__grid" />
-          <span className="map__pin" style={{ top: '22%', left: '30%' }} />
+          {/* <span className="map__pin" style={{ top: '22%', left: '30%' }} />
           <span className="map__pin" style={{ top: '55%', left: '58%' }} />
-          <span className="map__pin" style={{ top: '72%', left: '35%' }} />
+          <span className="map__pin" style={{ top: '72%', left: '35%' }} /> */}
         </div>
       </section>
     </AppLayout>
