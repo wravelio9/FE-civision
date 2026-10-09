@@ -1,21 +1,28 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ComponentType } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Icon } from './Icons'
 
+interface NavItemData {
+  key: string
+  label: string
+  icon: ComponentType
+  to?: string
+}
+
 // Items with a `to` path open a page. The others don't have a page yet.
-const NAV_TOP = [
+const NAV_TOP: NavItemData[] = [
   { key: 'dashboard', label: 'Dashboard', icon: Icon.Dashboard, to: '/dashboard' },
   { key: 'report', label: 'Report Details', icon: Icon.Report, to: '/report' },
   { key: 'upload', label: 'Upload Media', icon: Icon.Upload, to: '/upload' },
 ]
 
-const NAV_MID = [
+const NAV_MID: NavItemData[] = [
   { key: 'profile', label: 'Profile', icon: Icon.Profile, to: '/profile' },
   { key: 'settings', label: 'Settings', icon: Icon.Settings },
   { key: 'help', label: 'Get Help', icon: Icon.Help },
 ]
 
-function NavItem({ item }) {
+function NavItem({ item }: { item: NavItemData }) {
   const IconComp = item.icon
 
   if (item.to) {
@@ -41,9 +48,14 @@ function NavItem({ item }) {
 
 // open / onClose are only used on small screens, where the sidebar slides in
 // from the left. On desktop it's always visible and these do nothing.
-export function Sidebar({ open = false, onClose }) {
+interface SidebarProps {
+  open?: boolean
+  onClose?: () => void
+}
+
+export function Sidebar({ open = false, onClose }: SidebarProps) {
   const navigate = useNavigate()
-  const closeButtonRef = useRef(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
 
   // Move keyboard focus into the sidebar when it slides in
   useEffect(() => {

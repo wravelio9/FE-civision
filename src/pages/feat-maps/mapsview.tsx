@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 function MapView() {
-    const position = [-6.2018, 106.7829];
+    const position: [number, number] = [-6.2018, 106.7829];
 
     return (
         <MapContainer

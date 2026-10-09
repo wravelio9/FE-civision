@@ -11,7 +11,7 @@ const USER = {
   email: 'john.doe@gmail.com',
   // Set to an imported image (e.g. import photo from '../../assets/profile.jpg')
   // to show a photo. While it's null, the avatar shows the user's initials.
-  photoUrl: null,
+  photoUrl: null as string | null,
 }
 
 const STATS = [
@@ -20,7 +20,7 @@ const STATS = [
   { key: 'tasks', value: 10, label: 'Active Task' },
 ]
 
-function initials(name) {
+function initials(name: string) {
   return name
     .split(' ')
     .filter(Boolean)

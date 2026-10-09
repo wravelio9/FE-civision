@@ -31,13 +31,13 @@ const ROWS_PER_PAGE = 9
 // Which page buttons to show: the first two, the last two, and the pages next to
 // the current one. Missing numbers in between become "…".
 // Example: page 1 of 7 -> 1 2 … 6 7
-function getPageItems(current, total) {
+function getPageItems(current: number, total: number): (number | 'gap')[] {
   const candidates = [1, 2, current - 1, current, current + 1, total - 1, total]
   const pages = [...new Set(candidates)]
     .filter((p) => p >= 1 && p <= total)
     .sort((a, b) => a - b)
 
-  const items = []
+  const items: (number | 'gap')[] = []
   pages.forEach((p, i) => {
     if (i > 0 && p - pages[i - 1] > 1) items.push('gap')
     items.push(p)

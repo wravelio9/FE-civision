@@ -1,10 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type RefObject } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from './Icons'
 import { Time } from './Time'
 
+interface TopbarProps {
+  title: string
+  menuOpen?: boolean
+  menuButtonRef?: RefObject<HTMLButtonElement>
+  onMenuClick?: () => void
+}
+
 // onMenuClick opens the sidebar on small screens (the hamburger button is hidden on desktop).
-export function Topbar({ title, menuOpen = false, menuButtonRef, onMenuClick }) {
+export function Topbar({ title, menuOpen = false, menuButtonRef, onMenuClick }: TopbarProps) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   // True once the page is scrolled down. Switches on the glass background.

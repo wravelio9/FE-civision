@@ -1,7 +1,38 @@
 import { useEffect, useRef, useState } from 'react'
 
+// One detection. bbox is in ORIGINAL-image pixels.
+export interface Detection {
+  classId: number
+  className: string
+  confidence: number
+  bbox: { x1: number; y1: number; x2: number; y2: number }
+  isViolation?: boolean
+}
+
+// What sendPhotoToBackend() resolves to (see services/upload/uploadPhotos.js).
+export interface BackendAnalysis {
+  mediaId: unknown
+  message: string | null
+  coordinate: { lat: number; lon: number } | null
+  coordinateSource: string | null // 'gps_exif' | 'ocr' | 'manual' | null
+  ocrRawText: string | null
+  analysisId: unknown
+  totalDetections: number
+  totalViolations: number
+  unknownLocation: number
+}
+
+export interface DetectionItem {
+  fileName: string
+  url: string
+  imageSize: { width: number; height: number }
+  result: { detections: Detection[]; violationCount: number }
+  backend?: BackendAnalysis | null
+  backendError?: string | null
+}
+
 // How the backend found the coordinates (coordinateSource).
-const SOURCE_LABELS = {
+const SOURCE_LABELS: Record<string, string> = {
   gps_exif: 'GPS foto',
   ocr: 'OCR',
   manual: 'manual',
@@ -11,9 +42,9 @@ const SOURCE_LABELS = {
 // `item` = { fileName, url, imageSize:{width,height}, result } where result comes
 // from calculateViolation(). Coordinates in result.detections[].bbox are in
 // ORIGINAL-image pixels; we scale them to the displayed <img> size.
-export function DetectionResult({ item }) {
-  const imgRef = useRef(null)
-  const canvasRef = useRef(null)
+export function DetectionResult({ item }: { item: DetectionItem }) {
+  const imgRef = useRef<HTMLImageElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   // Re-draw whenever the image finishes layout / the window resizes.
   const [, setTick] = useState(0)
 
@@ -36,7 +67,7 @@ export function DetectionResult({ item }) {
       const sx = rect.width / imageSize.width
       const sy = rect.height / imageSize.height
 
-      const ctx = canvas.getContext('2d')
+      const ctx = canvas.getContext('2d')!
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       for (const d of detections) {
@@ -113,10 +144,10 @@ export function DetectionResult({ item }) {
         <div className="detect-result__backend">
           {item.backendError ? (
             <span className="detect-result__backend--error">Gagal disimpan: {item.backendError}</span>
-          ) : item.backend.coordinate ? (
+          ) : item.backend!.coordinate ? (
             <span>
-              Lokasi: {item.backend.coordinate.lat.toFixed(5)}, {item.backend.coordinate.lon.toFixed(5)}{' '}
-              <span className="detect-result__source">({SOURCE_LABELS[item.backend.coordinateSource] ?? item.backend.coordinateSource})</span>
+              Lokasi: {item.backend!.coordinate.lat.toFixed(5)}, {item.backend!.coordinate.lon.toFixed(5)}{' '}
+              <span className="detect-result__source">({SOURCE_LABELS[item.backend!.coordinateSource as string] ?? item.backend!.coordinateSource})</span>
             </span>
           ) : (
             <span className="detect-result__backend--muted">Tersimpan, koordinat tidak ditemukan.</span>

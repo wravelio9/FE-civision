@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { AppLayout } from '../../../components/AppLayout'
 import { Icon } from '../../../components/Icons'
-import { DetectionResult } from './DetectionResult'
+import {
+  DetectionResult,
+  type BackendAnalysis,
+  type Detection,
+  type DetectionItem,
+} from './DetectionResult'
 import { ensureModelReady, detectObjects, ModelLoadError } from '../../../services/yolo/yoloInference'
 import { sendPhotoToBackend } from '../../../services/upload/uploadPhotos'
 // Placeholder officer. Save the officer from the Upload Media design as
@@ -15,15 +20,26 @@ const ACCEPTED_TYPES = ['image/jpeg', 'image/png']
 const ACCEPTED_EXTENSIONS = /\.(jpe?g|png)$/i
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
-function formatSize(bytes) {
+type Status = 'idle' | 'predicting' | 'uploading' | 'success'
+
+// A photo that best.onnx has already predicted.
+interface Prediction {
+  file: File
+  url: string
+  imageSize: { width: number; height: number }
+  detections: Detection[]
+  inferenceMs: number
+}
+
+function formatSize(bytes: number) {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 // Splits the picked/dropped files into accepted files and error messages for the rest.
-function checkFiles(fileList) {
-  const accepted = []
-  const errors = []
+function checkFiles(fileList: FileList) {
+  const accepted: File[] = []
+  const errors: string[] = []
 
   for (const file of fileList) {
     const isJpgOrPng = ACCEPTED_TYPES.includes(file.type) || ACCEPTED_EXTENSIONS.test(file.name)
@@ -40,12 +56,12 @@ function checkFiles(fileList) {
   return { accepted, errors }
 }
 
-const isSameFile = (a, b) =>
+const isSameFile = (a: File, b: File) =>
   a.name === b.name && a.size === b.size && a.lastModified === b.lastModified
 
 // Loads a File into an <img> element the model can read.
-function loadImageElement(file) {
-  return new Promise((resolve, reject) => {
+function loadImageElement(file: File) {
+  return new Promise<{ img: HTMLImageElement; url: string }>((resolve, reject) => {
     const url = URL.createObjectURL(file)
     const img = new Image()
     img.onload = () => resolve({ img, url })
@@ -58,27 +74,27 @@ function loadImageElement(file) {
 }
 
 // Turns a thrown error into a short, user-friendly message (no stack traces).
-function friendlyError(err) {
+function friendlyError(err: unknown): string {
   if (err instanceof ModelLoadError) {
     return err.kind === 'not-found'
       ? 'Model AI tidak ditemukan. Pastikan best.onnx ada di public/models/.'
       : 'Model AI tidak bisa dimuat di browser ini.'
   }
-  return err?.message || 'terjadi kesalahan.'
+  return (err as { message?: string } | null | undefined)?.message || 'terjadi kesalahan.'
 }
 
 export default function UploadPage() {
   const navigate = useNavigate()
-  const inputRef = useRef(null)
-  const dashboardBtnRef = useRef(null)
-  const [files, setFiles] = useState([])
-  const [errors, setErrors] = useState([])
+  const inputRef = useRef<HTMLInputElement>(null)
+  const dashboardBtnRef = useRef<HTMLButtonElement>(null)
+  const [files, setFiles] = useState<File[]>([])
+  const [errors, setErrors] = useState<string[]>([])
   const [isDragging, setIsDragging] = useState(false)
   // 'idle' -> 'predicting' (ONNX in the browser) -> 'uploading' (backend OCR)
   //        -> 'success' (popup)
-  const [status, setStatus] = useState('idle')
-  const [analysisResults, setAnalysisResults] = useState([]) // DetectionResult items
-  const [progress, setProgress] = useState(null) // { done, total }
+  const [status, setStatus] = useState<Status>('idle')
+  const [analysisResults, setAnalysisResults] = useState<DetectionItem[]>([]) // DetectionResult items
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null) // { done, total }
 
   // Start loading best.onnx as soon as the page opens, so Submit doesn't wait
   // for the download. Errors are ignored here; Submit retries and reports them.
@@ -107,7 +123,7 @@ export default function UploadPage() {
   const handleSubmit = async () => {
     setErrors([])
     setAnalysisResults([])
-    const newErrors = []
+    const newErrors: string[] = []
 
     // ---------- 1. Predict with best.onnx ----------
     setStatus('predicting')
@@ -124,7 +140,7 @@ export default function UploadPage() {
 
     // One entry per photo that was predicted successfully:
     // { file, url, imageSize, detections, inferenceMs }
-    const predictions = []
+    const predictions: Prediction[] = []
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       try {
@@ -147,11 +163,11 @@ export default function UploadPage() {
     setStatus('uploading')
     setProgress({ done: 0, total: predictions.length })
 
-    const results = []
+    const results: DetectionItem[] = []
     for (let i = 0; i < predictions.length; i++) {
       const prediction = predictions[i]
-      let backend = null
-      let backendError = null
+      let backend: BackendAnalysis | null = null
+      let backendError: string | null = null
       try {
         backend = await sendPhotoToBackend(prediction.file, prediction.detections)
       } catch (err) {
@@ -189,7 +205,7 @@ export default function UploadPage() {
     setStatus('success')
   }
 
-  const addFiles = (fileList) => {
+  const addFiles = (fileList: FileList) => {
     const { accepted, errors: newErrors } = checkFiles(fileList)
     setErrors(newErrors)
     // Skip files that are already in the list
@@ -199,28 +215,28 @@ export default function UploadPage() {
     ])
   }
 
-  const removeFile = (fileToRemove) => {
+  const removeFile = (fileToRemove: File) => {
     setFiles((current) => current.filter((file) => file !== fileToRemove))
   }
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault() // required, otherwise the browser doesn't allow dropping here
     setIsDragging(true)
   }
 
-  const handleDragLeave = (e) => {
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
     // Moving between elements inside the drop zone also fires dragleave, so ignore those
-    if (!e.currentTarget.contains(e.relatedTarget)) setIsDragging(false)
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setIsDragging(false)
   }
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault() // stops the browser from opening the photo in the tab
     setIsDragging(false)
     addFiles(e.dataTransfer.files)
   }
 
-  const handleInputChange = (e) => {
-    addFiles(e.target.files)
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    addFiles(e.target.files!)
     e.target.value = '' // lets the same file be picked again after it's removed
   }
 
@@ -245,7 +261,7 @@ export default function UploadPage() {
           <button
             type="button"
             className="upload-dropzone__btn"
-            onClick={() => inputRef.current.click()}
+            onClick={() => inputRef.current!.click()}
           >
             <Icon.Plus />
             Add Files

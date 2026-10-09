@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
@@ -11,10 +11,17 @@ const DESKTOP_QUERY = '(min-width: 901px)'
 // topbar + the page's own content on the right.
 // fitScreen: lock the page to the screen height so it can't scroll (used by the Dashboard).
 // hero: paint a purple band behind the topbar and turn the topbar text white (used by Profile).
-export function AppLayout({ title, fitScreen = false, hero = false, children }) {
+interface AppLayoutProps {
+  title: string
+  fitScreen?: boolean
+  hero?: boolean
+  children?: ReactNode
+}
+
+export function AppLayout({ title, fitScreen = false, hero = false, children }: AppLayoutProps) {
   // Only used on small screens, where the sidebar slides in from the left.
   const [menuOpen, setMenuOpen] = useState(false)
-  const menuButtonRef = useRef(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
   const { pathname } = useLocation()
 
   const closeMenu = () => {
@@ -31,7 +38,7 @@ export function AppLayout({ title, fitScreen = false, hero = false, children }) 
   useEffect(() => {
     if (!menuOpen) return
 
-    const handleKey = (e) => {
+    const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeMenu()
     }
     document.addEventListener('keydown', handleKey)
@@ -47,7 +54,7 @@ export function AppLayout({ title, fitScreen = false, hero = false, children }) 
   // If the window gets wide again, the sidebar is always visible, so drop the open state
   useEffect(() => {
     const desktop = window.matchMedia(DESKTOP_QUERY)
-    const handleChange = (e) => {
+    const handleChange = (e: MediaQueryListEvent) => {
       if (e.matches) setMenuOpen(false)
     }
     desktop.addEventListener('change', handleChange)
