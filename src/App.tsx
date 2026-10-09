@@ -2,8 +2,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import LoginPage from './pages/feat-login/LoginPage'
 import Dashboard from './pages/feat-dashboard/Dashboard'
 import ReportPage from './pages/feat-report/ReportPage'
-import UploadPage from './pages/feat-upload/jsx/UploadPage'
+import UploadPage from './pages/feat-upload/UploadPage'
 import ProfilePage from './pages/feat-profile/ProfilePage'
+import HelpPage from './pages/feat-help/HelpPage'
+import NotificationPage from './pages/feat-notification/NotificationPage'
 export default function App() {
   return (
     <BrowserRouter>
@@ -13,6 +15,8 @@ export default function App() {
         <Route path="/report" element={<ReportPage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/help" element={<HelpPage />} />
+        <Route path="/notifications" element={<NotificationPage />} />
       </Routes>
     </BrowserRouter>
   )

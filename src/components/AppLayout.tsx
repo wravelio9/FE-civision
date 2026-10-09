@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
+import { Icon } from './Icons'
 import './AppLayout.css'
 
 // Same breakpoint as AppLayout.css: above this the sidebar is always visible.
@@ -11,14 +12,24 @@ const DESKTOP_QUERY = '(min-width: 901px)'
 // topbar + the page's own content on the right.
 // fitScreen: lock the page to the screen height so it can't scroll (used by the Dashboard).
 // hero: paint a purple band behind the topbar and turn the topbar text white (used by Profile).
+// showTopbar: set to false for pages with their own header (used by Notification).
+//   On small screens a bar with only the hamburger button is shown instead, so the
+//   sidebar can still be opened.
 interface AppLayoutProps {
   title: string
   fitScreen?: boolean
   hero?: boolean
+  showTopbar?: boolean
   children?: ReactNode
 }
 
-export function AppLayout({ title, fitScreen = false, hero = false, children }: AppLayoutProps) {
+export function AppLayout({
+  title,
+  fitScreen = false,
+  hero = false,
+  showTopbar = true,
+  children,
+}: AppLayoutProps) {
   // Only used on small screens, where the sidebar slides in from the left.
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
@@ -75,12 +86,29 @@ export function AppLayout({ title, fitScreen = false, hero = false, children }: 
       />
 
       <main className="main">
-        <Topbar
-          title={title}
-          menuOpen={menuOpen}
-          menuButtonRef={menuButtonRef}
-          onMenuClick={() => setMenuOpen(true)}
-        />
+        {showTopbar ? (
+          <Topbar
+            title={title}
+            menuOpen={menuOpen}
+            menuButtonRef={menuButtonRef}
+            onMenuClick={() => setMenuOpen(true)}
+          />
+        ) : (
+          // Small screens only (hidden on desktop, where the sidebar is always visible)
+          <div className="menu-bar">
+            <button
+              ref={menuButtonRef}
+              type="button"
+              className="icon-btn"
+              aria-label="Open menu"
+              aria-controls="app-sidebar"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(true)}
+            >
+              <Icon.Menu />
+            </button>
+          </div>
+        )}
         {/* Only the page content animates in. The sidebar and topbar stay static. */}
         <div className="page-content">{children}</div>
       </main>

@@ -1,20 +1,20 @@
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { AppLayout } from '../../../components/AppLayout'
-import { Icon } from '../../../components/Icons'
+import { AppLayout } from '../../components/AppLayout'
+import { Icon } from '../../components/Icons'
 import {
   DetectionResult,
   type BackendAnalysis,
   type Detection,
   type DetectionItem,
 } from './DetectionResult'
-import { ensureModelReady, detectObjects, ModelLoadError } from '../../../services/yolo/yoloInference'
-import { sendPhotoToBackend } from '../../../services/upload/uploadPhotos'
+import { ensureModelReady, detectObjects, ModelLoadError } from '../../services/yolo/yoloInference'
+import { sendPhotoToBackend } from '../../services/upload/uploadPhotos'
 // Placeholder officer. Save the officer from the Upload Media design as
 // src/assets/officer-upload.png, then change this line to import that file instead.
 import officerImg from '../../../assets/officer-upload.png'
-import '../css/UploadPage.css'
+import './UploadPage.css'
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png']
 const ACCEPTED_EXTENSIONS = /\.(jpe?g|png)$/i

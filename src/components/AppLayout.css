@@ -300,6 +300,12 @@
   }
 }
 
+/* Hamburger-only bar for pages without the topbar (<AppLayout showTopbar={false}>).
+   Only shown on small screens, see Responsive below. */
+.menu-bar {
+  display: none;
+}
+
 /* Close button inside the sidebar: only shown on small screens */
 .sidebar__close {
   display: none;
@@ -376,6 +382,11 @@
 
   .topbar .topbar__menu {
     display: inline-flex;
+  }
+
+  .menu-bar {
+    display: flex;
+    padding-top: 18px;
   }
 }
 

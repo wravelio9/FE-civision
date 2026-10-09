@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import officerImg from '../../assets/officer-login.png'
+import officerImgMobile from '../../assets/officer-login-mobile.png'
+import civisionMark from '../../assets/civision-mark.png'
 import { EyeOff } from '../../components/EyeOff'
 import { Eye } from '../../components/Eye'
 import './LoginPage.css'
@@ -20,10 +22,13 @@ export default function LoginPage() {
 
   return (
     <div className="page">
+      {/* Civision mark above the card. Only shown on mobile. */}
+      <img className="login-logo" src={civisionMark} alt="Civision" />
+
       <div className="card">
-        {/* Left panel: officer photo on purple gradient */}
+        {/* Left panel (top panel on mobile): officer photo on purple gradient */}
         <div className="card__illustration">
-          <img className="officer-img" src={officerImg} />
+          <img className="officer-img" src={officerImg} alt="" />
         </div>
 
         {/* Right panel: login form */}

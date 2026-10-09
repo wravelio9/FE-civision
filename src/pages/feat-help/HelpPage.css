@@ -1,0 +1,206 @@
+/* Get Help: full-screen page without the sidebar */
+.help-page {
+  --purple: #5a4fcf;
+  --purple-hover: #4a40b8;
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f7f7fa;
+  color: #2b2f4a;
+  font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ---------- Header: back button on the left, logo in the middle ---------- */
+.help-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 32px 24px;
+}
+
+.help-back {
+  position: absolute;
+  left: 32px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: var(--purple);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.help-back:hover {
+  background: var(--purple-hover);
+}
+
+.help-back:focus-visible,
+.help-send:focus-visible {
+  outline: 2px solid #8f88e6;
+  outline-offset: 2px;
+}
+
+.help-logo {
+  display: block;
+  height: 28px;
+  width: auto;
+}
+
+/* ---------- Body: illustration on the left, form panel on the right ---------- */
+.help-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 43fr 57fr;
+}
+
+.help-illustration {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Fills the column and sits on the bottom edge, like the design */
+.help-illustration img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.help-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 32px;
+  margin: 30px 0 0 0;
+  background: #fff;
+  border-top-left-radius: 32px;
+  box-shadow: -12px 0 40px rgba(45, 43, 107, 0.05);
+}
+
+.help-form {
+  width: min(440px, 100%);
+  /* height: min(480px, 100%); */
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  /* Same entrance as the other pages' content */
+  animation: help-fade-in 0.45s ease-out both;
+}
+
+@keyframes help-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-form {
+    animation: none;
+  }
+}
+
+.help-title {
+  margin-bottom: 22px;
+  text-align: center;
+  color: var(--purple);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* Borderless fields with a soft shadow */
+.help-input {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 4px 18px rgba(45, 43, 107, 0.1);
+  padding: 13px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #374151;
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.help-input::placeholder {
+  color: #b3b0dd;
+}
+
+.help-input:focus {
+  box-shadow: 0 4px 18px rgba(45, 43, 107, 0.1), 0 0 0 2px #c9c6ec;
+}
+
+.help-input--textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.help-send {
+  align-self: flex-end;
+  border: none;
+  border-radius: 999px;
+  background: var(--purple);
+  color: #fff;
+  padding: 6px 22px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.05s ease;
+}
+
+.help-send:hover {
+  background: var(--purple-hover);
+}
+
+.help-send:active {
+  transform: translateY(1px);
+}
+
+/* ---------- Small screens: illustration on top, form panel below ---------- */
+@media (max-width: 900px) {
+  .help-header {
+    padding: 20px 20px 16px;
+  }
+
+  .help-back {
+    left: 20px;
+  }
+
+  .help-logo {
+    height: 24px;
+  }
+
+  .help-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: 240px 1fr;
+  }
+
+  .help-panel {
+    align-items: flex-start;
+    padding: 36px 24px 48px;
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -12px 40px rgba(45, 43, 107, 0.06);
+  }
+
+  .help-title {
+    font-size: 22px;
+  }
+}

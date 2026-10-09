@@ -54,7 +54,13 @@ export function Topbar({ title, menuOpen = false, menuButtonRef, onMenuClick }: 
         </div>
       </div>
       <div className="topbar__actions">
-        <button type="button" className="icon-btn" aria-label="Notifications">
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label="Notifications"
+          aria-current={pathname === '/notifications' ? 'page' : undefined}
+          onClick={() => navigate('/notifications')}
+        >
           <Icon.Bell />
         </button>
         <button

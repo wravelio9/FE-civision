@@ -20,7 +20,7 @@ const NAV_TOP: NavItemData[] = [
 const NAV_MID: NavItemData[] = [
   { key: 'profile', label: 'Profile', icon: Icon.Profile, to: '/profile' },
   { key: 'settings', label: 'Settings', icon: Icon.Settings },
-  { key: 'help', label: 'Get Help', icon: Icon.Help },
+  { key: 'help', label: 'Get Help', icon: Icon.Help, to: '/help' },
 ]
 
 function NavItem({ item }: { item: NavItemData }) {

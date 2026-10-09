@@ -2,7 +2,7 @@ import { useState, useEffect, createElement } from 'react'
 import { AppLayout } from '../../components/AppLayout'
 import { Icon } from '../../components/Icons'
 import { useNavigate } from 'react-router-dom'
-import MapView from '../feat-maps/mapsview'
+import MapView from '../feat-login/mapsview'
 import Officer from '../../assets/officer-dashboard.png'
 import './Dashboard.css'
 
