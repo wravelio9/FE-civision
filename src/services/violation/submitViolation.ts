@@ -7,15 +7,26 @@
 // to change in the app.
 //
 // Base URL comes from the environment: VITE_API_BASE_URL (see .env).
+import type { ViolationResult } from './violationRule'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
 // TODO(backend): set the real path + method once the contract is confirmed.
 const ENDPOINT_PATH = '/reports'
 
+export interface ViolationPayloadInput {
+  fileName?: string | null
+  imageSize?: { width: number; height: number } | null
+  result: ViolationResult
+  backend?: string | null
+  inferenceMs?: number | null
+}
+
+export type ViolationPayload = ReturnType<typeof buildViolationPayload>
+
 // Builds the JSON body we intend to send. Documented and stable so the UI can
 // show "payload ready" even before the endpoint exists.
-export function buildViolationPayload({ fileName, imageSize, result, backend, inferenceMs }) {
+export function buildViolationPayload({ fileName, imageSize, result, backend, inferenceMs }: ViolationPayloadInput) {
   return {
     source: fileName ?? null,
     image: imageSize ? { width: imageSize.width, height: imageSize.height } : null,
@@ -36,7 +47,9 @@ export function buildViolationPayload({ fileName, imageSize, result, backend, in
 }
 
 export class BackendError extends Error {
-  constructor(message, { status, cause } = {}) {
+  declare status: number | undefined
+
+  constructor(message: string, { status, cause }: { status?: number; cause?: unknown } = {}) {
     super(message)
     this.name = 'BackendError'
     this.status = status
@@ -44,12 +57,23 @@ export class BackendError extends Error {
   }
 }
 
+export interface SubmitResult {
+  ok: true
+  dryRun: boolean
+  endpoint: string
+  payload: ViolationPayload
+  response?: unknown
+}
+
 // Sends the payload to the backend.
 //   options.dryRun (default true): build + return the payload WITHOUT a network
 //     call. This keeps the detection pipeline fully usable before the endpoint
 //     is confirmed, so a missing/undefined backend never breaks detection.
 // Returns { ok, dryRun, endpoint, payload, response? }.
-export async function submitViolation(payload, options = {}) {
+export async function submitViolation(
+  payload: ViolationPayload,
+  options: { dryRun?: boolean } = {},
+): Promise<SubmitResult> {
   const dryRun = options.dryRun ?? true
   const endpoint = `${BASE_URL}${ENDPOINT_PATH}`
 
@@ -58,7 +82,7 @@ export async function submitViolation(payload, options = {}) {
     return { ok: true, dryRun: true, endpoint, payload }
   }
 
-  let res
+  let res: Response
   try {
     res = await fetch(endpoint, {
       method: 'POST',
@@ -75,7 +99,7 @@ export async function submitViolation(payload, options = {}) {
     })
   }
 
-  let response = null
+  let response: unknown = null
   try {
     response = await res.json()
   } catch {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ComponentType } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Icon } from './Icons'
+import civisionLogo from '../assets/civision-logo.png'
 
 interface NavItemData {
   key: string
@@ -65,8 +66,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
   return (
     <aside id="app-sidebar" className={`sidebar${open ? ' sidebar--open' : ''}`}>
       <div className="sidebar__logo">
-        <span className="sidebar__logo-mark" />
-        <span className="sidebar__logo-text">Civision</span>
+        <img className="sidebar__logo-img" src={civisionLogo} alt="Civision" />
         <button
           ref={closeButtonRef}
           type="button"

@@ -16,23 +16,31 @@ import wasmJsep from 'onnxruntime-web/ort-wasm-simd-threaded.jsep.wasm?url'
 import mjsJsep from 'onnxruntime-web/ort-wasm-simd-threaded.jsep.mjs?url'
 import wasmAsync from 'onnxruntime-web/ort-wasm-simd-threaded.asyncify.wasm?url'
 import mjsAsync from 'onnxruntime-web/ort-wasm-simd-threaded.asyncify.mjs?url'
-import { YOLO_CONFIG } from './config.js'
+import { YOLO_CONFIG } from './config'
 
+// ORT's typings only list { wasm, mjs } keys, but at runtime it looks files up by
+// their real names, so the object is cast to the declared type.
 ort.env.wasm.wasmPaths = {
   'ort-wasm-simd-threaded.mjs': mjsSimd,
   'ort-wasm-simd-threaded.jsep.wasm': wasmJsep,
   'ort-wasm-simd-threaded.jsep.mjs': mjsJsep,
   'ort-wasm-simd-threaded.asyncify.wasm': wasmAsync,
   'ort-wasm-simd-threaded.asyncify.mjs': mjsAsync,
-}
+} as unknown as typeof ort.env.wasm.wasmPaths
+
+export type Backend = 'webgpu' | 'wasm'
+type GpuNavigator = Navigator & { gpu?: { requestAdapter(): Promise<unknown> } }
+export type ModelLoadErrorKind = 'not-found' | 'load-failed'
 
 // Module-level cache. These persist for the life of the page.
-let sessionPromise = null // in-flight or resolved load, so we never load twice
-let activeBackend = null // 'webgpu' | 'wasm', set once the session is created
+let sessionPromise: Promise<ort.InferenceSession> | null = null // in-flight or resolved load, so we never load twice
+let activeBackend: Backend | null = null // 'webgpu' | 'wasm', set once the session is created
 
 // A loading error we want callers to be able to recognise and show nicely.
 export class ModelLoadError extends Error {
-  constructor(message, { cause, kind } = {}) {
+  declare kind: ModelLoadErrorKind | undefined
+
+  constructor(message: string, { cause, kind }: { cause?: unknown; kind?: ModelLoadErrorKind } = {}) {
     super(message)
     this.name = 'ModelLoadError'
     this.kind = kind // 'not-found' | 'load-failed'
@@ -40,15 +48,16 @@ export class ModelLoadError extends Error {
   }
 }
 
-export function getActiveBackend() {
+export function getActiveBackend(): Backend | null {
   return activeBackend
 }
 
-async function isWebGpuAvailable() {
+async function isWebGpuAvailable(): Promise<boolean> {
   // navigator.gpu exists in supporting browsers; requestAdapter() confirms a real adapter.
-  if (typeof navigator === 'undefined' || !navigator.gpu) return false
+  // (navigator.gpu isn't in TypeScript's DOM lib, hence the GpuNavigator cast.)
+  if (typeof navigator === 'undefined' || !(navigator as GpuNavigator).gpu) return false
   try {
-    const adapter = await navigator.gpu.requestAdapter()
+    const adapter = await (navigator as GpuNavigator).gpu!.requestAdapter()
     return Boolean(adapter)
   } catch {
     return false
@@ -57,8 +66,8 @@ async function isWebGpuAvailable() {
 
 // Make sure best.onnx exists before ORT tries to parse it. Without this, a missing
 // file turns into a confusing protobuf parse error instead of a clear 404.
-async function fetchModelBytes(url) {
-  let res
+async function fetchModelBytes(url: string): Promise<Uint8Array> {
+  let res: Response
   try {
     res = await fetch(url)
   } catch (err) {
@@ -93,14 +102,14 @@ async function fetchModelBytes(url) {
   return bytes
 }
 
-async function createSession() {
+async function createSession(): Promise<ort.InferenceSession> {
   const modelBytes = await fetchModelBytes(YOLO_CONFIG.modelPath)
 
   // Try WebGPU first, fall back to WASM. The app must still work without WebGPU.
   const preferWebGpu = await isWebGpuAvailable()
-  const backendsToTry = preferWebGpu ? ['webgpu', 'wasm'] : ['wasm']
+  const backendsToTry: Backend[] = preferWebGpu ? ['webgpu', 'wasm'] : ['wasm']
 
-  let lastError = null
+  let lastError: unknown = null
   for (const backend of backendsToTry) {
     try {
       const session = await ort.InferenceSession.create(modelBytes, {
@@ -123,7 +132,7 @@ async function createSession() {
 
 // Returns the shared session, creating it on first call. Concurrent callers all
 // await the same promise, so the model is only ever loaded once.
-export function loadModel() {
+export function loadModel(): Promise<ort.InferenceSession> {
   if (!sessionPromise) {
     sessionPromise = createSession().catch((err) => {
       sessionPromise = null // allow a retry after a failure
@@ -133,7 +142,7 @@ export function loadModel() {
   return sessionPromise
 }
 
-export function isModelLoaded() {
+export function isModelLoaded(): boolean {
   return activeBackend !== null
 }
 

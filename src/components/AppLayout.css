@@ -39,17 +39,12 @@
   padding: 4px 10px 30px;
 }
 
-.sidebar__logo-mark {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--purple), var(--purple-dark));
-}
-
-.sidebar__logo-text {
-  font-weight: 600;
-  font-size: 18px;
-  color: var(--purple-dark);
+.sidebar__logo-img {
+  display: block;
+  height: 30px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
 }
 
 .sidebar__nav {

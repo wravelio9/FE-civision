@@ -18,9 +18,9 @@ export const YOLO_CONFIG = {
   paddingValue: 114,
   classNames: {
     0: 'gerobak',
-  },
+  } as Record<number, string>,
 }
 
-export function classNameFor(classId) {
+export function classNameFor(classId: number): string {
   return YOLO_CONFIG.classNames[classId] ?? `class ${classId}`
 }

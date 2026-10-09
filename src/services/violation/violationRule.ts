@@ -10,9 +10,32 @@
 //   'polygon'                  -> a detection is a violation if its box centre
 //                                 falls inside a forbidden polygon (provided by
 //                                 the caller). No polygon is invented here.
+import type { Detection } from '../yolo/postprocessing'
+
+export interface Point {
+  x: number
+  y: number
+}
+
+export type ViolationMode = 'detection-only' | 'polygon'
+
+export interface ViolationOptions {
+  mode?: ViolationMode
+  polygon?: Point[]
+}
+
+export type EvaluatedDetection<T extends Detection = Detection> = T & { isViolation: boolean }
+
+export interface ViolationResult<T extends Detection = Detection> {
+  mode: ViolationMode
+  detections: EvaluatedDetection<T>[]
+  violations: EvaluatedDetection<T>[]
+  violationCount: number
+  isViolation: boolean
+}
 
 // Ray-casting point-in-polygon test. polygon = [{x, y}, ...] in image pixels.
-function pointInPolygon(point, polygon) {
+function pointInPolygon(point: Point, polygon: Point[]): boolean {
   let inside = false
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
     const xi = polygon[i].x
@@ -28,17 +51,20 @@ function pointInPolygon(point, polygon) {
   return inside
 }
 
-function boxCentre(bbox) {
+function boxCentre(bbox: Detection['bbox']): Point {
   return { x: (bbox.x1 + bbox.x2) / 2, y: (bbox.y1 + bbox.y2) / 2 }
 }
 
 // detections: array from detectObjects(). options: { mode, polygon }.
 // Returns { mode, detections, violations, violationCount, isViolation }.
 // Each item carries an `isViolation` flag; `violations` is the subset flagged true.
-export function calculateViolation(detections, options = {}) {
+export function calculateViolation<T extends Detection>(
+  detections: T[],
+  options: ViolationOptions = {},
+): ViolationResult<T> {
   const mode = options.mode ?? 'detection-only'
 
-  let evaluated
+  let evaluated: EvaluatedDetection<T>[]
   if (mode === 'polygon') {
     const polygon = options.polygon
     if (!Array.isArray(polygon) || polygon.length < 3) {

@@ -19,6 +19,7 @@
 //
 // Vercel limits a request body to ~4.5 MB, so photos are sent one at a time and
 // oversized photos are shrunk first.
+import type { Detection } from '../yolo/postprocessing'
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
 const UPLOAD_ENDPOINT = `${BASE_URL}/api/upload`
@@ -28,8 +29,53 @@ const ANALYSIS_ENDPOINT = `${BASE_URL}/api/analysis`
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
 const MAX_SIDE = 2560 // longest side after shrinking an oversized photo
 
+type MediaId = string | number
+
+// Detection in the shape the backend expects.
+interface PayloadDetection {
+  label: string
+  confidence: number
+  bbox: { x1: number; y1: number; x2: number; y2: number }
+}
+
+// Loose shape of the JSON bodies the backend sends back (both endpoints).
+interface BackendJson {
+  success?: boolean
+  ok?: boolean
+  error?: string
+  message?: string
+  data?: {
+    media?: { id?: MediaId }[]
+    errors?: { filename?: string; error?: string }[]
+  }
+  coordinate?: { lat: number; lon: number } | null
+  coordinateSource?: string | null
+  ocrRawText?: string | null
+  result?: {
+    analysisId?: MediaId | null
+    totalDetections?: number
+    totalViolations?: number
+    unknownLocation?: number
+  }
+}
+
+// What sendPhotoToBackend() resolves to.
+export interface AnalysisResult {
+  mediaId: MediaId
+  message: string | null
+  coordinate: { lat: number; lon: number } | null
+  coordinateSource: string | null // 'gps_exif' | 'ocr' | 'manual' | null
+  ocrRawText: string | null
+  analysisId: MediaId | null
+  totalDetections: number
+  totalViolations: number
+  unknownLocation: number
+}
+
 export class UploadError extends Error {
-  constructor(message, { status, cause } = {}) {
+  declare status: number | undefined
+
+  constructor(message: string, { status, cause }: { status?: number; cause?: unknown } = {}) {
     super(message)
     this.name = 'UploadError'
     this.status = status
@@ -40,7 +86,7 @@ export class UploadError extends Error {
 // Photos larger than the request limit are re-encoded as a smaller JPEG.
 // Smaller photos are sent untouched (keeps original quality and EXIF GPS).
 // Returns { file, scale } where scale maps original pixels -> sent pixels.
-async function shrinkIfTooLarge(file) {
+async function shrinkIfTooLarge(file: File): Promise<{ file: File; scale: number }> {
   if (file.size <= MAX_UPLOAD_BYTES) return { file, scale: 1 }
 
   const bitmap = await createImageBitmap(file)
@@ -48,11 +94,11 @@ async function shrinkIfTooLarge(file) {
   const canvas = document.createElement('canvas')
   canvas.width = Math.round(bitmap.width * scale)
   canvas.height = Math.round(bitmap.height * scale)
-  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
   bitmap.close?.()
 
   for (const quality of [0.85, 0.7, 0.55]) {
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality))
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality))
     if (blob && blob.size <= MAX_UPLOAD_BYTES) {
       const name = file.name.replace(/\.[^.]+$/, '') + '.jpg'
       return { file: new File([blob], name, { type: 'image/jpeg' }), scale }
@@ -63,8 +109,8 @@ async function shrinkIfTooLarge(file) {
 
 // POSTs a FormData body. Returns { res, json } where json is null if the body
 // isn't JSON (some backend errors come back as an HTML page).
-async function postForm(url, body) {
-  let res
+async function postForm(url: string, body: FormData): Promise<{ res: Response; json: BackendJson | null }> {
+  let res: Response
   try {
     // Don't set Content-Type: the browser adds the multipart boundary itself.
     res = await fetch(url, { method: 'POST', body })
@@ -79,7 +125,7 @@ async function postForm(url, body) {
   }
 
   const text = await res.text()
-  let json = null
+  let json: BackendJson | null = null
   try {
     json = JSON.parse(text)
   } catch {
@@ -89,7 +135,7 @@ async function postForm(url, body) {
 }
 
 // Step 1: store the photo. Resolves to the mediaId the backend created.
-async function uploadMedia(file) {
+async function uploadMedia(file: File): Promise<MediaId> {
   const body = new FormData()
   body.append('files', file, file.name) // field name must be "files"
 
@@ -109,7 +155,15 @@ async function uploadMedia(file) {
 }
 
 // Step 2: OCR/EXIF coordinates + zone check + save, using our ONNX detections.
-async function analyzePhoto({ mediaId, file, detections }) {
+async function analyzePhoto({
+  mediaId,
+  file,
+  detections,
+}: {
+  mediaId: MediaId
+  file: File
+  detections: PayloadDetection[]
+}): Promise<AnalysisResult> {
   const body = new FormData()
   body.append('photo', file, file.name)
   body.append('payload', JSON.stringify({ mediaId, detections }))
@@ -138,7 +192,7 @@ async function analyzePhoto({ mediaId, file, detections }) {
 // Sends one photo and its ONNX detections to the backend.
 // detections: output of detectObjects() (bbox in original-image pixels).
 // Resolves to the backend's analysis result (see analyzePhoto above).
-export async function sendPhotoToBackend(file, detections) {
+export async function sendPhotoToBackend(file: File, detections: Detection[]): Promise<AnalysisResult> {
   if (!BASE_URL) {
     throw new UploadError('alamat backend belum diatur (VITE_API_BASE_URL di .env).')
   }

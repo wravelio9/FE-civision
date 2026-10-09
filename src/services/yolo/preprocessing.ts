@@ -7,15 +7,30 @@
 //
 // We also return the letterbox metadata (scale + padding) so postprocessing can
 // map 640-space boxes back to the original image.
-import { ort } from './session.js'
-import { YOLO_CONFIG } from './config.js'
+import { ort } from './session'
+import { YOLO_CONFIG } from './config'
+
+// Anything that can be drawn onto a canvas: <img>, <canvas>, <video> frame.
+export type ImageSource = HTMLImageElement | HTMLCanvasElement | HTMLVideoElement
+
+// Letterbox transform, used by postprocessing to map boxes back.
+export interface LetterboxMeta {
+  srcW: number
+  srcH: number
+  scale: number
+  padX: number
+  padY: number
+  inputW: number
+  inputH: number
+}
 
 // Draws the source image onto a 640x640 canvas, scaled to fit while keeping its
 // aspect ratio, with the leftover area filled with the padding colour (114).
 // Returns the canvas 2D context's pixel data plus the transform metadata.
-function letterbox(source, targetW, targetH, padValue) {
-  const srcW = source.naturalWidth || source.videoWidth || source.width
-  const srcH = source.naturalHeight || source.videoHeight || source.height
+function letterbox(source: ImageSource, targetW: number, targetH: number, padValue: number) {
+  const s = source as Partial<HTMLImageElement & HTMLVideoElement & HTMLCanvasElement>
+  const srcW = (s.naturalWidth || s.videoWidth || s.width) as number
+  const srcH = (s.naturalHeight || s.videoHeight || s.height) as number
 
   if (!srcW || !srcH) {
     throw new Error('The image has no dimensions yet. Wait for it to finish loading.')
@@ -32,7 +47,7 @@ function letterbox(source, targetW, targetH, padValue) {
   const canvas = document.createElement('canvas')
   canvas.width = targetW
   canvas.height = targetH
-  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!
 
   // Fill the whole canvas with the grey padding colour first.
   ctx.fillStyle = `rgb(${padValue}, ${padValue}, ${padValue})`
@@ -42,14 +57,15 @@ function letterbox(source, targetW, targetH, padValue) {
 
   const { data } = ctx.getImageData(0, 0, targetW, targetH) // RGBA, row-major
 
+  const meta: LetterboxMeta = { srcW, srcH, scale, padX, padY, inputW: targetW, inputH: targetH }
   return {
     rgba: data,
-    meta: { srcW, srcH, scale, padX, padY, inputW: targetW, inputH: targetH },
+    meta,
   }
 }
 
 // Converts the RGBA pixel array into a planar float32 NCHW tensor, normalised /255.
-function rgbaToTensor(rgba, width, height) {
+function rgbaToTensor(rgba: Uint8ClampedArray, width: number, height: number) {
   const pixelCount = width * height
   const chw = new Float32Array(pixelCount * 3) // [R-plane, G-plane, B-plane]
 
@@ -69,7 +85,7 @@ function rgbaToTensor(rgba, width, height) {
 }
 
 // Public entry point. Accepts an HTMLImageElement / canvas / video frame.
-export function preprocess(source) {
+export function preprocess(source: ImageSource) {
   const { inputWidth, inputHeight, paddingValue } = YOLO_CONFIG
   const { rgba, meta } = letterbox(source, inputWidth, inputHeight, paddingValue)
   const tensor = rgbaToTensor(rgba, inputWidth, inputHeight)

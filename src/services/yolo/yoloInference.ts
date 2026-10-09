@@ -5,10 +5,12 @@
 //
 // Detection shape (coordinates are in ORIGINAL-image pixels):
 //   { classId, className, confidence, bbox: { x1, y1, x2, y2 } }
-import { loadModel, getActiveBackend, isModelLoaded, ModelLoadError } from './session.js'
-import { YOLO_CONFIG } from './config.js'
-import { preprocess } from './preprocessing.js'
-import { postprocess } from './postprocessing.js'
+import { loadModel, getActiveBackend, isModelLoaded, ModelLoadError } from './session'
+import { YOLO_CONFIG } from './config'
+import { preprocess, type ImageSource } from './preprocessing'
+import { postprocess, type PostprocessOptions } from './postprocessing'
+
+export type { Detection } from './postprocessing'
 
 // Loads the model if needed. Safe to call repeatedly; the session is cached.
 export async function ensureModelReady() {
@@ -18,19 +20,19 @@ export async function ensureModelReady() {
 
 // Runs detection on an image/canvas/video-frame element.
 // Returns { detections, backend, inferenceMs }.
-export async function detectObjects(source, options = {}) {
+export async function detectObjects(source: ImageSource, options: PostprocessOptions = {}) {
   const session = await loadModel()
 
   const { tensor, meta } = preprocess(source)
 
-  let output
+  let output: Float32Array
   const started = performance.now()
   try {
     const feeds = { [YOLO_CONFIG.inputName]: tensor }
     const results = await session.run(feeds)
     // Single output; take the first regardless of its name.
     const outputTensor = results[session.outputNames[0]]
-    output = outputTensor.data
+    output = outputTensor.data as Float32Array
   } finally {
     // Free the input tensor's GPU/CPU buffer promptly.
     tensor.dispose?.()

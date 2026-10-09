@@ -7,10 +7,38 @@
 //
 // Steps: read xywh+conf -> filter by confidence -> xywh->xyxy -> NMS (IoU 0.45)
 //        -> reverse letterbox (subtract pad, divide by scale) -> clip to image.
-import { YOLO_CONFIG, classNameFor } from './config.js'
+import { YOLO_CONFIG, classNameFor } from './config'
+import type { LetterboxMeta } from './preprocessing'
+
+// Axis-aligned box as [x1,y1,x2,y2].
+interface Box {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}
+
+// A candidate box in 640 space, before NMS.
+interface Candidate extends Box {
+  classId: number
+  confidence: number
+}
+
+// Final detection, coordinates in ORIGINAL-image pixels.
+export interface Detection {
+  classId: number
+  className: string
+  confidence: number
+  bbox: Box
+}
+
+export interface PostprocessOptions {
+  confidenceThreshold?: number
+  nmsIoUThreshold?: number
+}
 
 // Intersection-over-Union of two [x1,y1,x2,y2] boxes.
-function iou(a, b) {
+function iou(a: Box, b: Box): number {
   const interX1 = Math.max(a.x1, b.x1)
   const interY1 = Math.max(a.y1, b.y1)
   const interX2 = Math.min(a.x2, b.x2)
@@ -28,12 +56,12 @@ function iou(a, b) {
 
 // Greedy non-maximum suppression: keep the highest-confidence box, drop boxes
 // that overlap it more than the IoU threshold, repeat.
-function nonMaxSuppression(boxes, iouThreshold) {
+function nonMaxSuppression<T extends Candidate>(boxes: T[], iouThreshold: number): T[] {
   const sorted = [...boxes].sort((a, b) => b.confidence - a.confidence)
-  const kept = []
+  const kept: T[] = []
 
   while (sorted.length > 0) {
-    const best = sorted.shift()
+    const best = sorted.shift()!
     kept.push(best)
     for (let i = sorted.length - 1; i >= 0; i--) {
       // Only suppress boxes of the same class.
@@ -45,10 +73,14 @@ function nonMaxSuppression(boxes, iouThreshold) {
   return kept
 }
 
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
 
 // output: Float32Array of length 5*8400. meta: letterbox metadata from preprocess().
-export function postprocess(output, meta, options = {}) {
+export function postprocess(
+  output: ArrayLike<number>,
+  meta: LetterboxMeta,
+  options: PostprocessOptions = {},
+): Detection[] {
   const confidenceThreshold = options.confidenceThreshold ?? YOLO_CONFIG.confidenceThreshold
   const iouThreshold = options.nmsIoUThreshold ?? YOLO_CONFIG.nmsIoUThreshold
 
@@ -62,7 +94,7 @@ export function postprocess(output, meta, options = {}) {
   const hOff = 3 * numBoxes
   const confOff = 4 * numBoxes // first (and only) class channel
 
-  const candidates = []
+  const candidates: Candidate[] = []
   for (let i = 0; i < numBoxes; i++) {
     const confidence = output[confOff + i]
     if (confidence < confidenceThreshold) continue
