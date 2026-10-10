@@ -218,33 +218,39 @@
   background: #4caf50;
 }
 
-/* Map (placeholder) */
+/* Map preview: one big button that opens the full-screen map */
 .map {
   position: relative;
   background: #e8ecf3;
   border-radius: 14px;
   overflow: hidden;
   min-height: 320px;    /* used when the map sits under the table on small screens */
+  cursor: pointer;
 }
 
-.map__grid {
+.map:focus-visible {
+  outline: 3px solid #8f88e6;
+  outline-offset: 3px;
+}
+
+/* Sits above the Leaflet panes (z-index up to 1000) and catches every click */
+.map__hit {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(#dfe4ee 1px, transparent 1px),
-    linear-gradient(90deg, #dfe4ee 1px, transparent 1px);
-  background-size: 40px 40px;
-  opacity: 0.9;
+  z-index: 1100;
 }
 
-.map__pin {
+.map__notice {
   position: absolute;
-  width: 16px;
-  height: 16px;
-  background: var(--purple);
-  border: 3px solid #fff;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+  left: 12px;
+  bottom: 12px;
+  z-index: 1100;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 11px;
+  color: #d0433a;
+  box-shadow: 0 2px 8px rgba(20, 20, 50, 0.12);
 }
 
 /* ---------- Responsive ---------- */
@@ -273,10 +279,6 @@
     background: #e0e2ee;  /* a bit darker than the panel so the map stands out */
   }
 
-  .map__grid {
-    background-image: linear-gradient(#d1d4e4 1px, transparent 1px),
-      linear-gradient(90deg, #d1d4e4 1px, transparent 1px);
-  }
 }
 
 /* Short laptop screens (e.g. 1366x768): tighten the spacing so all rows still fit */

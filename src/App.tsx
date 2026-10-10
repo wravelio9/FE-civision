@@ -5,6 +5,7 @@ import ReportPage from './pages/feat-report/ReportPage'
 import UploadPage from './pages/feat-upload/UploadPage'
 import ProfilePage from './pages/feat-profile/ProfilePage'
 import HelpPage from './pages/feat-help/HelpPage'
+import MapPage from './pages/feat-maps/MapPage'
 import NotificationPage from './pages/feat-notification/NotificationPage'
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/map" element={<MapPage />} />
         <Route path="/report" element={<ReportPage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/profile" element={<ProfilePage />} />

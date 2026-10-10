@@ -1,8 +1,10 @@
-import { useState, useEffect, createElement } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { AppLayout } from '../../components/AppLayout'
 import { Icon } from '../../components/Icons'
-import { useNavigate } from 'react-router-dom'
-import MapView from '../feat-login/mapsview'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { ViolationMap } from '../feat-maps/ViolationMap'
+import { useMapData } from '../feat-maps/useMapData'
+import { filterByTimeRange } from '../../services/dashboard/mapData'
 import Officer from '../../assets/officer-dashboard.png'
 import './Dashboard.css'
 
@@ -15,6 +17,19 @@ const REVIEW_ROWS = Array.from({ length: 6 }, () => ({
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const mapPreviewRef = useRef<HTMLDivElement>(null)
+  const { violations, error: mapError } = useMapData()
+  const previewViolations = useMemo(() => filterByTimeRange(violations, 'weekly'), [violations])
+
+  const openMap = () => navigate('/dashboard/map')
+
+  // Coming back from the full-screen map: put keyboard focus back on the map card
+  useEffect(() => {
+    if ((location.state as { focusMap?: boolean } | null)?.focusMap) {
+      mapPreviewRef.current?.focus()
+    }
+  }, [location.state])
 
   return (
     // fitScreen: the dashboard always fits on one screen and can't be scrolled
@@ -80,12 +95,25 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="map" aria-label="Map of incident locations">
-          <MapView />
-          <div className="map__grid" />
-          {/* <span className="map__pin" style={{ top: '22%', left: '30%' }} />
-          <span className="map__pin" style={{ top: '55%', left: '58%' }} />
-          <span className="map__pin" style={{ top: '72%', left: '35%' }} /> */}
+        {/* Static map preview. Clicking it (or Enter/Space) opens the full-screen map. */}
+        <div
+          ref={mapPreviewRef}
+          className="map"
+          role="button"
+          tabIndex={0}
+          aria-label="Perbesar peta lokasi pelanggaran"
+          onClick={openMap}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault() // Space would otherwise scroll the page
+              openMap()
+            }
+          }}
+        >
+          <ViolationMap violations={previewViolations} interactive={false} />
+          {/* Catches every click so the preview map itself never reacts */}
+          <span className="map__hit" aria-hidden="true" />
+          {mapError && <span className="map__notice">Data pelanggaran gagal dimuat</span>}
         </div>
       </section>
     </AppLayout>

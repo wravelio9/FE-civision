@@ -116,6 +116,23 @@ function Plus() {
   )
 }
 
+function Minus() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+// Outlined triangle pointing down (dropdown arrow on the map's time filter)
+function TriangleDown() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M4.5 7h15L12 18.5 4.5 7Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 function Close() {
   return (
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
@@ -249,6 +266,8 @@ export const Icon = {
   Download,
   ArrowRight,
   Plus,
+  Minus,
+  TriangleDown,
   Close,
   Menu,
   ChevronLeft,

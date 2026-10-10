@@ -1,0 +1,359 @@
+/* Full-screen map: fills everything right of the sidebar (see .app-layout--full-bleed) */
+.map-page {
+  --map-purple: #5a4fcf;
+  --map-purple-hover: #4a40b8;
+
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Leaflet panes use z-index up to 1000, so the overlays sit above that */
+.map-page__top {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  right: 20px;
+  z-index: 1100;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  pointer-events: none; /* the gaps between controls still let you drag the map */
+}
+
+.map-page__top > * {
+  pointer-events: auto;
+}
+
+/* ---------- Back button ---------- */
+.map-back {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--map-purple);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(45, 43, 107, 0.25);
+  transition: background 0.15s ease;
+}
+
+.map-back:hover {
+  background: var(--map-purple-hover);
+}
+
+/* ---------- Search ---------- */
+.map-search {
+  position: relative;
+  flex: 0 1 420px;
+  min-width: 0;
+  margin-left: auto; /* centred between back button and dropdown */
+}
+
+.map-search__box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--map-purple);
+  box-shadow: 0 4px 14px rgba(20, 20, 50, 0.12);
+}
+
+.map-search__box:focus-within {
+  box-shadow: 0 4px 14px rgba(20, 20, 50, 0.12), 0 0 0 2px #c9c5f3;
+}
+
+.map-search__box svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.map-search__input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  color: #2b2f4a;
+}
+
+.map-search__input::placeholder {
+  color: #6b6a8a;
+}
+
+.map-search__results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(20, 20, 50, 0.16);
+}
+
+.map-search__result {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.map-search__result--active {
+  background: #eeecfb;
+}
+
+.map-search__address {
+  font-size: 13px;
+  font-weight: 500;
+  color: #2d2b6b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-search__time {
+  font-size: 11px;
+  color: #8a8a96;
+}
+
+.map-search__empty {
+  padding: 10px;
+  font-size: 13px;
+  color: #8a8a96;
+}
+
+/* ---------- Time range dropdown ---------- */
+.map-range {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.map-range__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  color: #2d2b6b;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(20, 20, 50, 0.12);
+}
+
+.map-range__button svg {
+  color: var(--map-purple);
+}
+
+.map-range__list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(20, 20, 50, 0.16);
+  outline: none;
+}
+
+.map-range__option {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2d2b6b;
+  cursor: pointer;
+}
+
+.map-range__option--active {
+  background: #eeecfb;
+}
+
+.map-range__option[aria-selected='true'] {
+  font-weight: 600;
+  color: var(--map-purple);
+}
+
+/* ---------- Zoom +/- ---------- */
+.map-zoom {
+  position: absolute;
+  right: 20px;
+  bottom: 24px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.map-zoom__btn {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 10px;
+  background: var(--map-purple);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(45, 43, 107, 0.3);
+  transition: background 0.15s ease;
+}
+
+.map-zoom__btn svg {
+  width: 26px;
+  height: 26px;
+}
+
+.map-zoom__btn:hover:not([aria-disabled='true']) {
+  background: var(--map-purple-hover);
+}
+
+.map-zoom__btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.map-back:focus-visible,
+.map-range__button:focus-visible,
+.map-zoom__btn:focus-visible,
+.map-page__retry:focus-visible {
+  outline: 3px solid #fff;
+  box-shadow: 0 0 0 5px var(--map-purple);
+}
+
+/* ---------- Loading / error / empty notice ---------- */
+.map-page__notice {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  z-index: 1100;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 160px); /* stays clear of the zoom buttons */
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  color: #2d2b6b;
+  box-shadow: 0 4px 14px rgba(20, 20, 50, 0.14);
+}
+
+.map-page__spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #dcdaf5;
+  border-top-color: var(--map-purple);
+  animation: map-spin 0.8s linear infinite;
+}
+
+@keyframes map-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.map-page__retry {
+  border: none;
+  border-radius: 999px;
+  background: var(--map-purple);
+  color: #fff;
+  padding: 4px 14px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* Text only for screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Small screens ---------- */
+@media (max-width: 600px) {
+  .map-page__top {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    gap: 8px;
+  }
+
+  .map-back,
+  .map-search__box,
+  .map-range__button {
+    height: 44px; /* touch target */
+  }
+
+  .map-back {
+    width: 44px;
+  }
+
+  .map-search {
+    flex: 1 1 auto;
+    margin-left: 0;
+  }
+
+  .map-search__box {
+    padding: 0 12px;
+  }
+
+  .map-range {
+    margin-left: 0;
+  }
+
+  .map-range__button {
+    gap: 8px;
+    padding: 0 12px;
+  }
+
+  .map-zoom {
+    right: 12px;
+    bottom: 16px;
+  }
+
+  .map-page__notice {
+    left: 12px;
+    right: 76px;
+    max-width: none;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-page__spinner {
+    animation-duration: 2s;
+  }
+}

@@ -1,0 +1,91 @@
+.violation-map {
+  width: 100%;
+  height: 100%;
+  background: #eceef3;
+  font-family: 'Poppins', system-ui, sans-serif;
+}
+
+/* Light, desaturated tiles like the design. Only the tiles are filtered,
+   so the purple markers keep their color. */
+.violation-map .leaflet-tile-pane {
+  filter: grayscale(0.75) brightness(1.04) contrast(0.92);
+}
+
+/* ---------- Marker: photo thumbnail above a purple pin ---------- */
+.vmarker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+}
+
+.vmarker__thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #c9cad3; /* placeholder when there's no photo */
+  border: 2px solid #fff;
+  box-shadow: 0 3px 8px rgba(20, 20, 50, 0.25);
+}
+
+.vmarker__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vmarker__pin {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #5a4fcf;
+  border: 4px solid #fff;
+  box-shadow: 0 0 0 2px #5a4fcf, 0 2px 6px rgba(20, 20, 50, 0.3);
+}
+
+.vmarker:focus-visible {
+  outline: none;
+}
+
+.vmarker:focus-visible .vmarker__thumb {
+  outline: 3px solid #8f88e6;
+  outline-offset: 2px;
+}
+
+/* ---------- Popup ---------- */
+.vpopup p {
+  margin: 0;
+}
+
+.vpopup__address {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2d2b6b;
+  margin-bottom: 4px !important;
+}
+
+.vpopup__status {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.vpopup__status--valid {
+  color: #4c9a5f;
+}
+
+.vpopup__status--unverified {
+  color: #8a8a96;
+}
+
+.vpopup__status--invalid {
+  color: #d0433a;
+}
+
+.vpopup__time {
+  font-size: 11px;
+  color: #8a8a96;
+}

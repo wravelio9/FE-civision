@@ -20,6 +20,9 @@ interface AppLayoutProps {
   fitScreen?: boolean
   hero?: boolean
   showTopbar?: boolean
+  // fullBleed: content fills the whole area right of the sidebar, no padding and no
+  //   page scrolling (used by the full-screen map)
+  fullBleed?: boolean
   children?: ReactNode
 }
 
@@ -28,6 +31,7 @@ export function AppLayout({
   fitScreen = false,
   hero = false,
   showTopbar = true,
+  fullBleed = false,
   children,
 }: AppLayoutProps) {
   // Only used on small screens, where the sidebar slides in from the left.
@@ -74,7 +78,7 @@ export function AppLayout({
 
   return (
     <div
-      className={`app-layout${fitScreen ? ' app-layout--fit-screen' : ''}${hero ? ' app-layout--hero' : ''}`}
+      className={`app-layout${fitScreen ? ' app-layout--fit-screen' : ''}${hero ? ' app-layout--hero' : ''}${fullBleed ? ' app-layout--full-bleed' : ''}`}
     >
       <Sidebar open={menuOpen} onClose={closeMenu} />
 
