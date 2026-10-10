@@ -142,6 +142,32 @@
   background: #eeecfb;
 }
 
+/* Loading / error / empty row */
+.report-table__state {
+  padding: 32px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #9aa0b4;
+}
+
+.report-table__retry {
+  margin-left: 10px;
+  border: none;
+  border-radius: 999px;
+  background: var(--purple);
+  color: #fff;
+  padding: 4px 14px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* Previous page stays visible, dimmed, while the next one loads */
+.report-table--loading tbody {
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
 /* Status dot + label */
 .report-status {
   display: inline-flex;
